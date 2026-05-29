@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>视频开头生成器 v2.1</title>
+<style>
+:root{--r:10px;--trans:.2s}
+[data-theme="dark"]{--bg:#0d0d1a;--card:#15152a;--border:#252545;--text:#c0c0d0;--muted:#686880;--primary:#6c5ce7;--green:#00b894;--red:#ff6b6b;--gold:#fdcb6e;--input-bg:#0d0d1a}
+[data-theme="light"]{--bg:#f0f2f5;--card:#ffffff;--border:#d9d9d9;--text:#333;--muted:#999;--primary:#6c5ce7;--green:#00b894;--red:#ff6b6b;--gold:#e6a800;--input-bg:#f5f5f5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;transition:background var(--trans),color var(--trans)}
+.wide{max-width:1100px;margin:0 auto;padding:20px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:10px}
+header .ver{font-size:11px;background:var(--primary);color:#fff;padding:3px 10px;border-radius:12px;font-weight:600}
+.theme-btn{width:40px;height:40px;border:none;border-radius:50%;background:var(--card);color:var(--text);font-size:20px;cursor:pointer;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all var(--trans)}
+.theme-btn:hover{transform:scale(1.1)}
+
+.tab-bar{display:flex;gap:2px;margin-bottom:24px;background:var(--card);border-radius:12px;padding:4px;border:1px solid var(--border)}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;transition:all var(--trans)}
+.tab-btn.active{background:var(--primary);color:#fff}.tab-btn:hover:not(.active){color:var(--text)}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:800px){.cards{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:background var(--trans)}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-body{padding:20px}
+
+.fg{margin-bottom:14px}.fg label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none}
+.fg input:focus,.fg select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,92,231,.12)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pill{padding:8px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:12px;cursor:pointer;transition:all var(--trans);font-weight:500}
+.pill:hover{border-color:var(--primary);color:var(--primary)}
+
+.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px}
+.thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--input-bg)}
+.thumb:hover{border-color:var(--primary);transform:scale(1.04)}.thumb.selected{border-color:var(--gold);box-shadow:0 0 14px rgba(253,203,110,.3)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .mark{position:absolute;top:4px;right:4px;background:var(--gold);color:#000;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;display:none}
+.thumb.selected .mark{display:block}
+
+.btn{padding:10px 22px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--trans)}.btn:active{transform:scale(.97)}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{opacity:.9}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{opacity:.9}
+.btn-o{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-o:hover{color:var(--text);border-color:var(--primary)}
+.btn-xl{width:100%;padding:16px;font-size:16px;border-radius:12px}
+.btn-sm{padding:6px 14px;font-size:11px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+.timeline{display:flex;gap:2px;margin:16px 0;border-radius:8px;overflow:hidden}
+.tl{flex:1;text-align:center;padding:10px 4px;font-size:10px;color:var(--muted);background:var(--input-bg)}
+.tl.on{background:rgba(108,92,231,.18);color:var(--primary)}.tl .t{font-size:16px;font-weight:700;color:var(--text)}.tl.on .t{color:var(--primary)}
+
+.panel{display:none}.panel.active{display:block}
+
+/* Log panel */
+.log-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-top:20px;overflow:hidden}
+.log-head{padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.log-body{max-height:200px;overflow-y:auto;padding:12px 20px;font-size:11px;font-family:"Cascadia Code","Fira Code",monospace;line-height:1.7;background:#0a0a0f;color:#aaa}
+.log-body .ok{color:var(--green)}.log-body .err{color:var(--red)}.log-body .info{color:var(--primary)}
+.log-collapsed .log-body{display:none}
+
+/* Toast */
+.toast{position:fixed;top:24px;right:24px;z-index:1000;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}.toast.info{background:var(--primary)}
+@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Material grid */
+.mat-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--input-bg);border-radius:6px;margin:4px 0;font-size:12px}
+.mat-row img{width:40px;height:40px;border-radius:4px;object-fit:cover}
+.mat-row .mat-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mat-row .mat-size{color:var(--muted);font-size:10px;white-space:nowrap}
+
+/* Overlay */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center}
+.overlay.show{display:flex}.overlay .box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;max-width:500px;width:90%}
+.spin{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style></head>
+<body>
+<div id="toast" class="toast"></div>
+<div id="overlay" class="overlay"><div class="box"><div class="spin"></div><h3 style="color:var(--text)">正在生成视频...</h3><p style="color:var(--muted);font-size:13px;margin-top:8px">请耐心等待约 30-60 秒</p><button class="btn btn-o btn-sm" style="margin-top:16px" onclick="cancelGenerate()">取消</button></div></div>
+
+<div class="wide">
+<header>
+  <h1>视频开头模板生成器 <span class="ver">v2.1</span></h1>
+  <button class="theme-btn" id="themeBtn" title="切换主题" onclick="toggleTheme()">☀️</button>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="config">配置</button>
+  <button class="tab-btn" data-tab="icons">图标</button>
+  <button class="tab-btn" data-tab="material">素材库</button>
+  <button class="tab-btn" data-tab="generate">生成</button>
+</div>
+
+<!-- Config -->
+<div id="p-config" class="panel active"><div class="cards">
+<div class="card"><div class="card-head">文案设置</div><div class="card-body">
+<div class="fg"><label>顶部标题</label><input id="txtTitle"></div>
+<div class="fg"><label>悬念字幕</label><input id="txtHook"></div>
+<div class="fg"><label>目标名称</label><input id="txtTarget"></div>
+<div class="fg"><label>结尾文案</label><input id="txtAfter"></div>
+<button class="btn btn-p" onclick="saveConfig()">保存文案</button>
+</div></div>
+<div class="card"><div class="card-head">主题预设 & 时间线</div><div class="card-body">
+<div class="presets" id="presets"></div>
+<div class="timeline" style="margin-top:20px"><div class="tl on"><div class="t">2.1s</div>图标抽选</div><div class="tl"><div class="t">0.4s</div>目标揭晓</div><div class="tl"><div class="t">2.0s</div>停留展示</div><div class="tl"><div class="t">1.5s</div>切入实录</div></div>
+</div></div>
+</div></div>
+
+<!-- Icons -->
+<div id="p-icons" class="panel"><div class="card"><div class="card-head"><span>图标管理（点击设为"目标"）</span><div style="display:flex;gap:8px"><button class="btn btn-o btn-sm" onclick="resetIcons()">重置示例</button><label class="btn btn-p btn-sm" style="cursor:pointer">上传图标<input type="file" accept="image/*" onchange="uploadAsset(this,'icons')" multiple hidden></label></div></div><div class="card-body"><div class="thumb-grid" id="iconGrid"></div></div></div></div>
+
+<!-- Material Library -->
+<div id="p-material" class="panel"><div class="cards">
+<div class="card"><div class="card-head">素材库 <button class="btn btn-o btn-sm" onclick="scanAssets()">一键导入</button></div><div class="card-body" id="matBody">点击"一键导入"扫描所有素材</div></div>
+<div class="card"><div class="card-head">字体 & 模板</div><div class="card-body">
+<div class="fg"><label>中文字体</label><select id="fontSelect" onchange="changeFont()" class="res-select"></select></div>
+<div class="fg"><label>视频模板</label><select id="tplSelect" onchange="applyTemplate()" class="res-select"></select></div>
+</div></div>
+<div class="card"><div class="card-head">提取背景音乐</div><div class="card-body">
+<div class="fg"><label>从视频提取 BGM</label><div style="font-size:12px;color:var(--muted);margin-bottom:8px">选择一个视频文件，自动提取音频并设为背景音乐</div></div>
+<label class="btn btn-p btn-sm" style="cursor:pointer">选择视频提取音频<input type="file" accept="video/*" onchange="extractAudioFrom(this)" hidden></label>
+<div id="extractStatus" style="font-size:12px;margin-top:8px"></div>
+</div></div>
+</div></div>
+
+<!-- Generate -->
+<div id="p-generate" class="panel"><div class="cards">
+<div class="card"><div class="card-head">生成设置</div><div class="card-body">
+<div class="row2">
+<div class="fg"><label>分辨率</label><select id="resPreset" onchange="changeRes()" class="res-select"><option value="l">横屏 1920×1080</option><option value="p">竖屏 1080×1920</option><option value="s">方形 1080×1080</option></select></div>
+<div class="fg"><label>帧率 (越高越慢)</label><select id="fpsSelect" onchange="changeFps()" class="res-select"><option value="30">30fps 标准 (快)</option><option value="60">60fps 流畅 (中)</option><option value="90">90fps 高帧 (慢)</option></select></div></div>
+<div class="row2">
+<div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="subtitleToggle" checked onchange="toggleSubtitle()" style="width:auto"> 生成字幕</label></div></div>
+<button class="btn btn-g btn-xl" onclick="startGen()">一键生成视频</button>
+</div></div>
+<div class="card"><div class="card-head">素材状态</div><div class="card-body">
+<div style="font-size:12px;line-height:1.8" id="assetStatus"></div>
+<div class="btn-row"><label class="btn btn-o btn-sm" style="cursor:pointer">上传背景<input type="file" accept="image/*,video/*" onchange="uploadAsset(this,'backgrounds')" hidden></label><label class="btn btn-o btn-sm" style="cursor:pointer">上传实录<input type="file" accept="video/*" onchange="uploadAsset(this,'clips')" hidden></label><label class="btn btn-o btn-sm" style="cursor:pointer">上传BGM<input type="file" accept="audio/*" onchange="uploadAsset(this,'music')" hidden></label></div>
+</div></div>
+</div></div>
+
+<!-- Log Panel -->
+<div class="log-panel" id="logPanel">
+  <div class="log-head" onclick="document.getElementById('logPanel').classList.toggle('log-collapsed')">生成日志 <span style="font-size:11px;color:var(--muted)">点击折叠</span></div>
+  <div class="log-body" id="logBody"><span style="color:var(--muted)">等待生成...</span></div>
+</div>
+
+</div>
+
+<script>
+const A='',S=(n,d)=>document.querySelector(n),T=s=>{const t=S('#toast');t.textContent=s.msg;t.className='toast '+s.type;t.style.display='block';setTimeout(()=>t.style.display='none',4000)};
+let pollTimer=null;
+
+// Theme
+(function(){const s=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',s);S('#themeBtn').textContent=s==='dark'?'☀️':'🌙'})();
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('theme',n);S('#themeBtn').textContent=n==='dark'?'☀️':'🌙'}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));S('#p-'+b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='icons')loadIcons();if(b.dataset.tab==='material'){loadMat();loadFonts()}if(b.dataset.tab==='generate')loadAssetStatus();
+}));
+
+// Config
+async function loadCfg(){const r=await fetch(A+'/api/config');const c=await r.json();S('#txtTitle').value=c.texts?.top_title||'';S('#txtHook').value=c.texts?.hook_text||'';S('#txtTarget').value=c.texts?.target_name||'';S('#txtAfter').value=c.texts?.after_reveal_text||''}
+async function loadPresets(){const r=await fetch(A+'/api/presets');const p=await r.json();S('#presets').innerHTML=p.map((x,i)=>`<button class="pill" onclick="applyP(${JSON.stringify(x).replace(/'/g,"&#39;")})">${['🎮','🤖','🎬','💻','🎨'][i]||'📦'} ${x.name}</button>`).join('')}
+function applyP(p){S('#txtTitle').value=p.top_title;S('#txtHook').value=p.hook_text;S('#txtTarget').value=p.target_name;S('#txtAfter').value=p.after_reveal_text;saveConfig()}
+async function saveConfig(){const t={top_title:S('#txtTitle').value,hook_text:S('#txtHook').value,target_name:S('#txtTarget').value,after_reveal_text:S('#txtAfter').value};await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({texts:t})});T({msg:'配置已保存',type:'ok'})}
+async function changeRes(){const v=S('#resPreset').value;const m={l:{w:1920,h:1080},p:{w:1080,h:1920},s:{w:1080,h:1080}}[v];await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{width:m.w,height:m.h}})});T({msg:'分辨率已更新',type:'ok'})}
+async function changeFps(){const fps=parseInt(S('#fpsSelect').value);await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{fps:fps}})});T({msg:`帧率: ${fps}fps`,type:'ok'})}
+async function toggleSubtitle(){const on=S('#subtitleToggle').checked;await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{subtitle_enabled:on}})});T({msg:on?'字幕已开启':'字幕已关闭',type:'ok'})}
+
+// Templates
+async function loadTemplates(){const r=await fetch(A+'/api/templates');const tpls=await r.json();S('#tplSelect').innerHTML=Object.keys(tpls).map(k=>`<option value="${k}">${k}</option>`).join('')}
+async function applyTemplate(){const name=S('#tplSelect').value;await fetch(A+'/api/apply-template',{method:'POST',body:JSON.stringify({name})});T({msg:'模板已应用: '+name,type:'ok'})}
+
+// Audio extraction
+async function extractAudioFrom(input){const f=input.files[0];if(!f)return;S('#extractStatus').textContent='正在提取音频...';try{
+// Upload video first
+const uname='tmp_extract_'+Date.now()+'.mp4';
+await fetch(A+'/api/upload-clips',{method:'POST',headers:{'X-Filename':uname,'Content-Type':f.type},body:f});
+const r=await fetch(A+'/api/extract-audio',{method:'POST',body:JSON.stringify({video_path:'assets/clips/'+uname,output_name:'extracted_bgm.mp3'})});
+const d=await r.json();
+if(d.ok){S('#extractStatus').innerHTML='<span style="color:var(--green)">✅ 音频已提取并设为BGM</span>';T({msg:'BGM已设置',type:'ok'})}else{S('#extractStatus').textContent='提取失败: '+(d.error||'')}
+}catch(e){S('#extractStatus').textContent='失败: '+e.message}
+input.value=''}
+
+// Icons
+async function loadIcons(){const r=await fetch(A+'/api/assets');const a=await r.json();const cfg=await fetch(A+'/api/config');const c=await cfg.json();const t=c.assets?.target_icon||'';const icons=a.icons||[];S('#iconGrid').innerHTML=icons.map(f=>{const sel=t.endsWith(f)?'selected':'';return`<div class="thumb ${sel}" onclick="setTarget('assets/icons/${f}')"><img src="assets/icons/${f}" onerror="this.style.display='none'"><span class="mark">目标</span></div>`}).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">暂无图标</div>'}
+async function setTarget(p){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({assets:{target_icon:p}})});loadIcons();T({msg:'已设为揭晓目标',type:'ok'})}
+async function resetIcons(){await fetch(A+'/api/reset-icons',{method:'POST'});loadIcons();T({msg:'图标已重置',type:'ok'})}
+async function uploadAsset(input,folder){for(const f of input.files){await fetch(A+'/api/upload-'+folder,{method:'POST',headers:{'X-Filename':f.name,'Content-Type':f.type},body:f})}input.value='';if(folder==='icons')loadIcons();loadAssetStatus();T({msg:'已上传',type:'ok'})}
+
+// Materials
+async function scanAssets(){const r=await fetch(A+'/api/scan-assets',{method:'POST'});const d=await r.json();T({msg:'素材库已更新，共 '+d.total+' 个文件',type:'ok'});loadMat();loadAssetStatus();loadIcons()}
+async function loadMat(){const r=await fetch(A+'/api/material-db');const db=await r.json();let html='';for(const[k,files]of Object.entries(db)){html+=`<div style="font-weight:600;color:var(--text);margin:8px 0 4px">${k} (${files.length})</div>`;files.forEach(f=>{html+=`<div class="mat-row">${k==='icons'||k==='backgrounds'?`<img src="${f.path}" onerror="this.style.display='none'">`:''}<span class="mat-name">${f.name}</span><span class="mat-size">${f.size_kb}KB</span></div>`})}S('#matBody').innerHTML=html||'<span style="color:var(--muted)">暂无素材，点击"一键导入"扫描</span>'}
+async function loadAssetStatus(){const r=await fetch(A+'/api/material-db');const db=await r.json();const status=[];const labels={backgrounds:'背景',clips:'实录视频',music:'背景音乐',icons:'图标'};for(const[k,files]of Object.entries(db)){if(k==='icons')continue;status.push(`${labels[k]||k}: ${files.length?files[0].name:'未设置'}`)}S('#assetStatus').innerHTML=status.join('<br>')}
+
+// Fonts
+async function loadFonts(){const r=await fetch(A+'/api/fonts');const fonts=await r.json();const cfg=await fetch(A+'/api/config');const c=await cfg.json();const cur=c.assets?.font||'';S('#fontSelect').innerHTML=fonts.map(f=>`<option value="${f.path}" ${cur.includes(f.name)?'selected':''}>${f.name} ${f.source==='system'?'(系统)':''}</option>`).join('')||'<option>未找到字体</option>'}
+async function changeFont(){const v=S('#fontSelect').value;await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({assets:{font:v}})});T({msg:'字体已更新',type:'ok'})}
+
+// Generate
+async function startGen(){S('#overlay').classList.add('show');S('#logBody').innerHTML='';appendLog('[开始] 正在生成视频...','info');pollTimer=setInterval(pollLog,800);
+try{const r=await fetch(A+'/api/generate',{method:'POST'});const d=await r.json();clearInterval(pollTimer);S('#overlay').classList.remove('show');await pollLog();
+if(d.ok){appendLog('[完成] 视频生成成功！','ok');T({msg:'生成成功！output/output_intro.mp4',type:'ok'})}else{appendLog('[失败] '+(d.error||'未知错误'),'err');T({msg:'生成失败',type:'err'})}}catch(e){clearInterval(pollTimer);S('#overlay').classList.remove('show');appendLog('[错误] '+e.message,'err');T({msg:'请求失败',type:'err'})}}
+function cancelGenerate(){S('#overlay').classList.remove('show');clearInterval(pollTimer);appendLog('[取消] 用户取消生成','err');T({msg:'已取消',type:'info'})}
+async function pollLog(){try{const r=await fetch(A+'/api/job-log');const d=await r.json();if(d.lines){S('#logBody').innerHTML=d.lines.map(l=>{const c=l.includes('成功')||l.includes('完成')?'ok':l.includes('失败')||l.includes('错误')||l.includes('取消')?'err':'info';return`<span class="${c}">${esc(l)}</span>`}).join('<br>');S('#logBody').scrollTop=S('#logBody').scrollHeight}}catch(e){}}
+function appendLog(msg,type){const b=S('#logBody');b.innerHTML+=`<br><span class="${type||''}">${esc(msg)}</span>`;b.scrollTop=b.scrollHeight}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+loadCfg();loadPresets();loadTemplates();
+</script></body></html>

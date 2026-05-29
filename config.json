@@ -1,0 +1,59 @@
+{
+  "project": {
+    "output_name": "output_intro.mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "duration": 4.8,
+    "subtitle_enabled": false
+  },
+  "theme": {
+    "mode": "universal",
+    "style": "dark_smoke",
+    "accent_color": "#FFFFFF",
+    "highlight_color": "#FFD84D"
+  },
+  "texts": {
+    "top_title": "游戏安装教程",
+    "hook_text": "今天要介绍的是",
+    "target_name": "无尽入局",
+    "after_reveal_text": ""
+  },
+  "assets": {
+    "background": "assets/backgrounds/OIP-C.webp",
+    "icons_dir": "assets/icons",
+    "target_icon": "assets/icons/49dc472f9e8ed785fd41913609b2c157.png",
+    "intro_clip": "assets/clips/intro_clip.mp4",
+    "bgm": "assets/music/bgm.mp3",
+    "whoosh_sfx": "assets/sfx/whoosh.mp3",
+    "impact_sfx": "assets/sfx/impact.mp3",
+    "font": "assets/fonts/chinese_font.ttf"
+  },
+  "timing": {
+    "slide_start": 0.0,
+    "slide_fast": 0.3,
+    "slide_slow": 1.6,
+    "reveal": 2.1,
+    "reveal_end": 2.35,
+    "hold_start": 2.35,
+    "cut_to_clip": 3.3,
+    "end": 4.8
+  },
+  "animation": {
+    "roulette_speed": "medium",
+    "icon_size": 220,
+    "target_size": 360,
+    "enable_shake": true,
+    "enable_flash": true,
+    "enable_blur": true,
+    "enable_rgb_shift": true,
+    "enable_zoom": true
+  },
+  "layout": {
+    "selector_box_width": 280,
+    "selector_box_height": 280,
+    "selector_box_y": 460,
+    "top_title_y": 90,
+    "bottom_text_y": 900
+  }
+}

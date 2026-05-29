@@ -1,0 +1,6 @@
+﻿output/
+__pycache__/
+*.pyc
+assets/clips/intro_clip.mp4
+assets/music/*.mp3
+assets/icons/test_*

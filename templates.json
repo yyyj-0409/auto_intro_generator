@@ -1,0 +1,32 @@
+{
+  "暗黑悬疑": {
+    "theme": {"style":"dark_smoke","accent_color":"#FFFFFF","highlight_color":"#FFD84D"},
+    "layout": {"selector_box_y":460,"top_title_y":90,"bottom_text_y":900},
+    "animation": {"icon_size":220,"selector_box_color":"#FFFFFF","glow_color":"#FFD84D"}
+  },
+  "科技蓝光": {
+    "theme": {"style":"tech_blue","accent_color":"#00D4FF","highlight_color":"#00D4FF"},
+    "layout": {"selector_box_y":500,"top_title_y":80,"bottom_text_y":920},
+    "animation": {"icon_size":200,"selector_box_color":"#00D4FF","glow_color":"#00D4FF"}
+  },
+  "霓虹赛博": {
+    "theme": {"style":"neon_cyber","accent_color":"#FF00FF","highlight_color":"#00FF00"},
+    "layout": {"selector_box_y":440,"top_title_y":100,"bottom_text_y":880},
+    "animation": {"icon_size":240,"selector_box_color":"#FF00FF","glow_color":"#00FF00"}
+  },
+  "简约纯白": {
+    "theme": {"style":"clean_white","accent_color":"#333333","highlight_color":"#6c5ce7"},
+    "layout": {"selector_box_y":480,"top_title_y":70,"bottom_text_y":910},
+    "animation": {"icon_size":220,"selector_box_color":"#333333","glow_color":"#6c5ce7"}
+  },
+  "金质尊享": {
+    "theme": {"style":"luxe_gold","accent_color":"#D4AF37","highlight_color":"#FFD700"},
+    "layout": {"selector_box_y":450,"top_title_y":85,"bottom_text_y":890},
+    "animation": {"icon_size":230,"selector_box_color":"#D4AF37","glow_color":"#FFD700"}
+  },
+  "电竞红黑": {
+    "theme": {"style":"gamer_red","accent_color":"#FF3333","highlight_color":"#FF6600"},
+    "layout": {"selector_box_y":470,"top_title_y":90,"bottom_text_y":900},
+    "animation": {"icon_size":220,"selector_box_color":"#FF3333","glow_color":"#FF6600"}
+  }
+}
