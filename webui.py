@@ -1,13 +1,27 @@
 # webui.py — Web 配置面板 v2.1
 import json, os, sys, subprocess, glob as gmod
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 import threading
 JOB_LOG = []; JOB_RUNNING = False; JOB_DONE = False; JOB_OK = False; JOB_ERROR = ""; JOB_OUTPUT = ""
+_lock = threading.Lock()
+_cfg_lock = threading.Lock()
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
+        try:
+            self._handle_get()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+        except Exception:
+            try:
+                self.send_error(500)
+            except Exception:
+                pass
+
+    def _handle_get(self):
         routes = {
             "/api/config": self._send_config,
             "/api/presets": self._send_presets,
@@ -26,6 +40,17 @@ class Handler(SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        try:
+            self._handle_post()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+        except Exception:
+            try:
+                self.send_error(500)
+            except Exception:
+                pass
+
+    def _handle_post(self):
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length)
 
@@ -101,21 +126,24 @@ class Handler(SimpleHTTPRequestHandler):
 
     # ---- Job Log ----
     def _send_job_status(self):
-        self._json({
-            "running": JOB_RUNNING, "done": JOB_DONE, "ok": JOB_OK,
-            "error": JOB_ERROR, "output": JOB_OUTPUT, "log": JOB_LOG[-15:]
-        })
+        with _lock:
+            self._json({
+                "running": JOB_RUNNING, "done": JOB_DONE, "ok": JOB_OK,
+                "error": JOB_ERROR, "output": JOB_OUTPUT, "log": JOB_LOG[-15:]
+            })
 
     def _send_job_log(self):
         self._json({"lines":JOB_LOG})
 
     # ---- Config ----
     def _read_config(self):
-        with open(os.path.join(BASE_DIR,"config.json"),"r",encoding="utf-8") as f:
-            return json.load(f)
+        with _cfg_lock:
+            with open(os.path.join(BASE_DIR,"config.json"),"r",encoding="utf-8") as f:
+                return json.load(f)
     def _write_config(self, data):
-        with open(os.path.join(BASE_DIR,"config.json"),"w",encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        with _cfg_lock:
+            with open(os.path.join(BASE_DIR,"config.json"),"w",encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
 
     def _send_config(self):
         try: self._json(self._read_config())
@@ -152,13 +180,15 @@ class Handler(SimpleHTTPRequestHandler):
     # ---- Generate ----
     def _run_generate(self):
         global JOB_RUNNING, JOB_DONE, JOB_OK, JOB_ERROR, JOB_OUTPUT, JOB_LOG
-        if JOB_RUNNING:
-            self._json({"ok":False,"error":"已在生成中"})
-            return
+        with _lock:
+            if JOB_RUNNING:
+                self._json({"ok":False,"error":"已在生成中"})
+                return
+            JOB_RUNNING = True; JOB_DONE = False; JOB_OK = False
+            JOB_ERROR = ""; JOB_OUTPUT = ""
+            JOB_LOG = ["[开始] 正在生成..."]
         def _do():
             global JOB_LOG, JOB_RUNNING, JOB_DONE, JOB_OK, JOB_ERROR, JOB_OUTPUT
-            JOB_RUNNING = True; JOB_DONE = False; JOB_OK = False
-            JOB_LOG = ["[开始] 正在生成..."]
             try:
                 python = sys.executable
                 env = os.environ.copy(); env["PYTHONIOENCODING"] = "utf-8"
@@ -167,19 +197,35 @@ class Handler(SimpleHTTPRequestHandler):
                     capture_output=True, text=True, encoding="utf-8", errors="replace",
                     cwd=BASE_DIR, timeout=600, env=env
                 )
-                JOB_LOG.extend([l for l in result.stdout.split('\n') if l.strip()][-30:])
+                stdout_lines = [l for l in result.stdout.split('\n') if l.strip()]
+                JOB_LOG.extend(stdout_lines[-30:])
                 if result.returncode == 0:
-                    JOB_LOG.append("[完成] 视频生成成功！"); JOB_OK = True
-                    JOB_OUTPUT = os.path.join(BASE_DIR,"output","output_intro.mp4")
+                    JOB_LOG.append("[完成] 视频生成成功！")
+                    with _lock:
+                        JOB_OK = True
+                        for line in stdout_lines:
+                            if '📁' in line:
+                                p = line.split('📁')[1].strip()
+                                if os.path.exists(p):
+                                    JOB_OUTPUT = p
+                                    break
+                        if not JOB_OUTPUT:
+                            JOB_OUTPUT = os.path.join(BASE_DIR,"output","output_intro.mp4")
                 else:
                     JOB_LOG.append(f"[失败] 返回码: {result.returncode}")
-                    JOB_ERROR = (result.stderr or result.stdout)[-500:]
+                    with _lock:
+                        JOB_ERROR = (result.stderr or result.stdout)[-500:]
             except subprocess.TimeoutExpired:
-                JOB_LOG.append("[超时] 超过 600 秒"); JOB_ERROR = "超时"
+                JOB_LOG.append("[超时] 超过 600 秒")
+                with _lock:
+                    JOB_ERROR = "超时"
             except Exception as e:
-                JOB_LOG.append(f"[错误] {e}"); JOB_ERROR = str(e)
+                JOB_LOG.append(f"[错误] {e}")
+                with _lock:
+                    JOB_ERROR = str(e)
             finally:
-                JOB_DONE = True; JOB_RUNNING = False
+                with _lock:
+                    JOB_DONE = True; JOB_RUNNING = False
         threading.Thread(target=_do, daemon=True).start()
         self._json({"ok":True,"status":"started"})
 
@@ -286,11 +332,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, *a): pass
 
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
 def main():
     os.chdir(BASE_DIR)
     os.makedirs(os.path.join(BASE_DIR,"output"),exist_ok=True)
-    print(f"http://localhost:8888")
-    HTTPServer(("127.0.0.1",8888),Handler).serve_forever()
+    print(f"IntroForge v3.2 | http://localhost:8888")
+    ThreadingHTTPServer(("127.0.0.1",8888),Handler).serve_forever()
 
 if __name__ == "__main__":
     main()

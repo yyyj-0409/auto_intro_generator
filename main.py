@@ -207,8 +207,11 @@ def main():
 
 def export_hq(clips, config, bgm, sfx, W, H, FPS, TD, T):
     from moviepy import CompositeVideoClip, CompositeAudioClip
+    from datetime import datetime
     os.makedirs("output", exist_ok=True)
-    out = os.path.join("output", config["project"]["output_name"])
+    base = config["project"]["output_name"].rsplit(".", 1)[0]
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out = os.path.join("output", f"{base}_{ts}.mp4")
 
     final = CompositeVideoClip(clips, size=(W, H))
 

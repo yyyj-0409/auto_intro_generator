@@ -65,14 +65,45 @@
     "enable_zoom": true
   },
   "effects": {
-    "particle_burst": { "enabled": true, "count": 30, "max_radius": 500, "duration": 0.5 },
-    "shockwave": { "enabled": true, "max_radius": 650, "duration": 0.4 },
-    "light_rays": { "enabled": true, "count": 12, "max_length": 600, "duration": 0.45 },
-    "orbiting_particles": { "enabled": true, "count": 5, "orbit_radius": 280 },
-    "transition_speed_lines": { "enabled": true, "duration": 0.15, "count": 35 },
-    "transition_zoom_blur": { "enabled": true, "duration": 0.15 },
-    "hold_scan_line": { "enabled": true, "duration": 0.4 },
-    "status_badge": { "enabled": true, "text": "READY" }
+    "particle_burst": {
+      "enabled": true,
+      "count": 30,
+      "max_radius": 500,
+      "duration": 0.5
+    },
+    "shockwave": {
+      "enabled": true,
+      "max_radius": 650,
+      "duration": 0.4
+    },
+    "light_rays": {
+      "enabled": true,
+      "count": 12,
+      "max_length": 600,
+      "duration": 0.45
+    },
+    "orbiting_particles": {
+      "enabled": true,
+      "count": 5,
+      "orbit_radius": 280
+    },
+    "transition_speed_lines": {
+      "enabled": true,
+      "duration": 0.15,
+      "count": 35
+    },
+    "transition_zoom_blur": {
+      "enabled": true,
+      "duration": 0.15
+    },
+    "hold_scan_line": {
+      "enabled": true,
+      "duration": 0.4
+    },
+    "status_badge": {
+      "enabled": true,
+      "text": "READY"
+    }
   },
   "post_processing": {
     "vignette_strength": 0.35,
