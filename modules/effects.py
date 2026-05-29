@@ -593,3 +593,17 @@ def _draw_line_aa(frame, x1, y1, x2, y2, color, alpha):
         if 0 <= y < h and 0 <= x < w:
             frame[y, x, :3] += np.array(color) * alpha
             frame[y, x, 3] = alpha
+
+
+# ==================== 后处理管线 ====================
+
+def apply_post_processing(frame, config):
+    """统一后处理: 暗角 + 色彩分级 + 胶片颗粒"""
+    pp = config.get("post_processing", {})
+    frame = draw_vignette(frame, pp.get("vignette_strength", 0.35))
+    frame = color_grade(frame,
+        shadow_blue=pp.get("color_grade_shadow_blue", 5),
+        mid_warm=pp.get("color_grade_mid_warm", 3),
+        contrast=pp.get("color_grade_contrast", 1.04))
+    frame = add_film_grain(frame, pp.get("grain_strength", 0.04))
+    return frame

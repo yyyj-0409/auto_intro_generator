@@ -3,7 +3,14 @@
 import numpy as np
 from PIL import Image
 from moviepy import VideoClip
-from modules.effects import flash_frame, rgb_shift, rounded_icon, dark_bg_gradient, cubic_bezier_bounce, add_film_grain, color_grade
+from modules.effects import (
+    flash_frame, rgb_shift, rounded_icon, dark_bg_gradient,
+    cubic_bezier_bounce, add_film_grain, color_grade,
+    create_particle_burst, render_particle_burst,
+    create_shockwave_ring, render_shockwave,
+    create_light_rays, render_light_rays,
+    draw_vignette, apply_post_processing,
+)
 
 
 def create_reveal_scene(target_image, config, duration):
@@ -22,6 +29,34 @@ def create_reveal_scene(target_image, config, duration):
     n_frames = int(duration * fps)
     frames = []
     cx, cy = width // 2, height // 2 - 40
+
+    # 预计算粒子/光芒效果数据
+    eff_cfg = config.get("effects", {})
+    if eff_cfg.get("particle_burst", {}).get("enabled", True):
+        burst = create_particle_burst(
+            cx, cy,
+            num=eff_cfg["particle_burst"].get("count", 30),
+            max_radius=eff_cfg["particle_burst"].get("max_radius", 500),
+            duration=eff_cfg["particle_burst"].get("duration", 0.5))
+    else:
+        burst = None
+
+    if eff_cfg.get("shockwave", {}).get("enabled", True):
+        shockwave = create_shockwave_ring(
+            cx, cy,
+            max_radius=eff_cfg["shockwave"].get("max_radius", 650),
+            duration=eff_cfg["shockwave"].get("duration", 0.4))
+    else:
+        shockwave = None
+
+    if eff_cfg.get("light_rays", {}).get("enabled", True):
+        rays = create_light_rays(
+            cx, cy,
+            num_rays=eff_cfg["light_rays"].get("count", 12),
+            max_length=eff_cfg["light_rays"].get("max_length", 600),
+            duration=eff_cfg["light_rays"].get("duration", 0.45))
+    else:
+        rays = None
 
     for fi in range(n_frames):
         t = fi / fps
@@ -50,9 +85,16 @@ def create_reveal_scene(target_image, config, duration):
         if t > 0.03 and t < 0.2:
             frame = rgb_shift(frame, t, 0.03, 0.15, 3)
 
-        # 电影调色 + 胶片颗粒
-        frame = color_grade(frame, 4, 2, 1.04)
-        frame = add_film_grain(frame, 0.05)
+        # 粒子爆发 + 冲击波 + 光芒放射
+        if burst is not None:
+            render_particle_burst(frame, t, burst)
+        if shockwave is not None:
+            render_shockwave(frame, t, shockwave)
+        if rays is not None:
+            render_light_rays(frame, t, rays)
+
+        # 全局后处理
+        frame = apply_post_processing(frame, config)
         frames.append(frame)
 
     def make_frame(t):

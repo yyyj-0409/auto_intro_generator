@@ -3,7 +3,13 @@
 import numpy as np
 from PIL import Image
 from moviepy import ImageClip, VideoClip, CompositeVideoClip
-from modules.effects import create_selector_box, rounded_icon, dark_bg_gradient
+from modules.effects import (
+    create_selector_box, rounded_icon, dark_bg_gradient,
+    breathing_scale,
+    create_orbiting_particles, render_orbiting_particles,
+    draw_scan_line, draw_status_badge,
+    apply_post_processing,
+)
 
 
 def create_hold_scene(target_image, config, duration):
@@ -24,6 +30,17 @@ def create_hold_scene(target_image, config, duration):
     box_clip = ImageClip(box_img).with_duration(duration).with_position(
         (cx - box_w // 2 - box_pad, cy - box_h // 2 - box_pad))
 
+    # 预计算环绕粒子
+    eff_cfg = config.get("effects", {})
+    if eff_cfg.get("orbiting_particles", {}).get("enabled", True):
+        orbit = create_orbiting_particles(
+            cx, cy,
+            num=eff_cfg["orbiting_particles"].get("count", 5),
+            orbit_radius=eff_cfg["orbiting_particles"].get("orbit_radius", 280),
+            duration=duration)
+    else:
+        orbit = None
+
     bg = dark_bg_gradient(width, height)
     n_frames = int(duration * fps)
     frames = []
@@ -31,13 +48,34 @@ def create_hold_scene(target_image, config, duration):
     for fi in range(n_frames):
         t = fi / fps
         frame = bg.copy()
-        wave = np.sin(t * np.pi * 2) * 0.02
-        scale = 1.00 + 0.04 * (wave + 0.02)  # 1.00-1.04
+        scale = breathing_scale(t, 0.0, duration, 0.98, 1.04, 1.5)
 
         sz = max(10, int(target_size * scale))
         scaled = np.array(Image.fromarray(target_arr).resize((sz, sz), Image.LANCZOS))
         sx, sy = cx - sz // 2, cy - sz // 2
         _paste(frame, scaled, sx, sy)
+
+        # 环绕粒子
+        if orbit is not None:
+            render_orbiting_particles(frame, t, orbit)
+
+        # 扫描线 (前半段扫过一次)
+        if eff_cfg.get("hold_scan_line", {}).get("enabled", True):
+            scan_dur = eff_cfg["hold_scan_line"].get("duration", 0.4)
+            if t < scan_dur:
+                draw_scan_line(frame, t, duration=scan_dur)
+
+        # 状态标签 (开头闪现)
+        if eff_cfg.get("status_badge", {}).get("enabled", True):
+            badge_dur = 0.6
+            if t < badge_dur:
+                draw_status_badge(
+                    frame,
+                    eff_cfg["status_badge"].get("text", "READY"),
+                    width // 2, height - 120, t, badge_dur)
+
+        # 全局后处理
+        frame = apply_post_processing(frame, config)
         frames.append(frame)
 
     def make_frame(t):

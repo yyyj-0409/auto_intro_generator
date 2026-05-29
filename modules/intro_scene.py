@@ -3,7 +3,7 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from moviepy import ImageClip, CompositeVideoClip, VideoClip
-from modules.effects import create_selector_box, rounded_icon, dark_bg_gradient, cubic_bezier_ease_out_back, apply_motion_blur
+from modules.effects import create_selector_box, rounded_icon, dark_bg_gradient, cubic_bezier_ease_out_back, apply_motion_blur, draw_scan_line, apply_post_processing
 
 
 def create_roulette_scene(icon_images, target_idx, config, duration):
@@ -95,6 +95,13 @@ def create_roulette_scene(icon_images, target_idx, config, duration):
             px, py = cx + (iw - sw) // 2, int(box_cy - sh // 2)
             _paste(frame, scaled, px, py, bright)
 
+        # 快速滚动期间扫描线
+        if t_accel <= t <= t_accel + t_fast:
+            scan_t = t - t_accel
+            draw_scan_line(frame, scan_t, duration=t_fast)
+
+        # 全局后处理
+        frame = apply_post_processing(frame, config)
         frames.append(frame)
 
     def make_frame(t):

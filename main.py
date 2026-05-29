@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# main.py — v2.2 4.8s 短视频开头生成器
+# main.py — v3.2 6.0s 短视频开头生成器
 
 import sys, os, numpy as np
 from PIL import Image
@@ -18,12 +18,12 @@ from modules.text_renderer import render_text_clip_animated
 from modules.intro_scene import create_roulette_scene
 from modules.reveal_scene import create_reveal_scene
 from modules.hold_scene import create_hold_scene
-from modules.effects import dark_bg_gradient
+from modules.effects import dark_bg_gradient, make_speed_lines_frame, make_zoom_blur_frame
 
 
 def main():
     print("=" * 50)
-    print("  短视频开头生成器 v2.2")
+    print("  短视频开头生成器 v3.2")
     print("=" * 50)
 
     # 1
@@ -149,14 +149,49 @@ def main():
         return flash_frames[i] if flash_frames else np.ones((H, W, 3), dtype=np.uint8) * 255
     flash_trans = VC(flash_make, duration=flash_dur).with_start(T["cut_to_clip"])
 
+    # 速度线过渡 (cut_to_clip 前 0.15s, 逐渐增强)
+    tr_cfg = config.get("effects", {}).get("transition_speed_lines", {})
+    if tr_cfg.get("enabled", True):
+        sl_dur = tr_cfg.get("duration", 0.15)
+        sl_start = T["cut_to_clip"] - sl_dur
+        sl_frames = []
+        for fi in range(int(sl_dur * FPS)):
+            t_sl = fi / FPS
+            sl_frame = make_speed_lines_frame(W, H, t_sl, sl_dur, direction="radial")
+            sl_frames.append(sl_frame[:, :, :3])
+        def speed_line_make(t):
+            i = min(int(t * FPS), len(sl_frames) - 1) if sl_frames else 0
+            return sl_frames[i]
+        speed_line_overlay = VC(speed_line_make, duration=sl_dur).with_start(sl_start)
+    else:
+        speed_line_overlay = ColorClip((1, 1), color=(0, 0, 0, 0)).with_duration(0)
+
+    # 缩放模糊过渡 (cut_to_clip 后 0.15s, 柔化硬切到实录)
+    zb_cfg = config.get("effects", {}).get("transition_zoom_blur", {})
+    if zb_cfg.get("enabled", True):
+        zb_dur = zb_cfg.get("duration", 0.15)
+        zb_frames = []
+        for fi in range(int(zb_dur * FPS)):
+            t_zb = fi / FPS
+            zb_frame = make_zoom_blur_frame(W, H, t_zb, zb_dur)
+            zb_frames.append(zb_frame[:, :, :3])
+        def zoom_blur_make(t):
+            i = min(int(t * FPS), len(zb_frames) - 1) if zb_frames else 0
+            return zb_frames[i]
+        zoom_blur_overlay = VC(zoom_blur_make, duration=zb_dur).with_start(T["cut_to_clip"])
+    else:
+        zoom_blur_overlay = ColorClip((1, 1), color=(0, 0, 0, 0)).with_duration(0)
+
     # 5 — Composite (Bug fix: background FIRST)
     print("\n[5/6] 合成...")
     all_clips = [
-        background.with_start(0).with_duration(TD),               # 最底层背景
+        background.with_start(0).with_duration(TD),
         roulette.with_start(0).with_duration(roulette_dur),
         reveal.with_start(T["reveal"]).with_duration(reveal_dur),
         hold.with_start(T["hold_start"]).with_duration(hold_dur),
-        flash_trans,
+        speed_line_overlay,           # 速度线 (cut 前 0.15s)
+        flash_trans,                  # 白闪 (cut 时刻)
+        zoom_blur_overlay,            # 缩放模糊 (cut 后 0.15s)
         cut_clip.with_start(T["cut_to_clip"]).with_duration(clip_dur),
         title_clip.with_duration(T["cut_to_clip"]),
         hook_clip.with_duration(T["reveal"]),

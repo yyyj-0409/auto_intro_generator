@@ -3,8 +3,8 @@
     "output_name": "output_intro.mp4",
     "width": 1920,
     "height": 1080,
-    "fps": 30,
-    "duration": 4.8,
+    "fps": 60,
+    "duration": 6.0,
     "subtitle_enabled": false,
     "visual_cues_enabled": true
   },
@@ -33,12 +33,12 @@
   "timing": {
     "slide_start": 0.0,
     "slide_fast": 0.3,
-    "slide_slow": 1.6,
-    "reveal": 2.1,
-    "reveal_end": 2.35,
-    "hold_start": 2.35,
-    "cut_to_clip": 3.3,
-    "end": 4.8
+    "slide_slow": 1.8,
+    "reveal": 2.5,
+    "reveal_end": 3.0,
+    "hold_start": 3.0,
+    "cut_to_clip": 4.2,
+    "end": 6.0
   },
   "video_ui": {
     "style": "premium_neon",
@@ -63,6 +63,23 @@
     "enable_blur": true,
     "enable_rgb_shift": true,
     "enable_zoom": true
+  },
+  "effects": {
+    "particle_burst": { "enabled": true, "count": 30, "max_radius": 500, "duration": 0.5 },
+    "shockwave": { "enabled": true, "max_radius": 650, "duration": 0.4 },
+    "light_rays": { "enabled": true, "count": 12, "max_length": 600, "duration": 0.45 },
+    "orbiting_particles": { "enabled": true, "count": 5, "orbit_radius": 280 },
+    "transition_speed_lines": { "enabled": true, "duration": 0.15, "count": 35 },
+    "transition_zoom_blur": { "enabled": true, "duration": 0.15 },
+    "hold_scan_line": { "enabled": true, "duration": 0.4 },
+    "status_badge": { "enabled": true, "text": "READY" }
+  },
+  "post_processing": {
+    "vignette_strength": 0.35,
+    "grain_strength": 0.04,
+    "color_grade_shadow_blue": 5,
+    "color_grade_mid_warm": 3,
+    "color_grade_contrast": 1.04
   },
   "layout": {
     "selector_box_width": 280,
