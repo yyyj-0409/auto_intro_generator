@@ -1,138 +1,86 @@
-# 通用短视频开头模板生成器
+# IntroForge — 短视频开头生成器
 
-本地 Python 工具，根据素材自动生成 5-6 秒短视频开头 MP4。风格为"素材盲盒抽选 + 爆点揭晓 + 切入实录"。
+> 「素材盲盒抽选 · 爆点揭晓 · 一键生成」
 
-## 安装依赖
+本地创作工具，可用于个人内容生产。自动生成 4.8 秒短视频开头 MP4。
+
+## 适用场景
+
+游戏安装教程 / 软件安装教程 / AI 工具推荐 / 影视资源展示 / 素材合集展示 / 课程资料展示
+
+## 安装
 
 ```bash
 pip install -r requirements.txt
 ```
 
-依赖：
-- `moviepy>=2.0` — 视频合成
-- `pillow>=10.0` — 字幕渲染
-- `numpy>=1.24` — 帧处理
+**Windows 用户**：需确保已安装 FFmpeg 且在 PATH 中。
 
-> **Windows 用户**：MoviePy 新版本使用 `moviepy`（无大写），不是旧版 `moviepy`。
+## 中文字体
 
-## 准备素材
+将中文字体放入 `assets/fonts/chinese_font.ttf`，或使用 Windows 系统字体：
 
-将素材放入 `assets/` 目录：
-
-```
-assets/
-├── backgrounds/        # 背景图片/视频
-│   └── bg.png          # 或 bg.mp4
-├── icons/              # 图标/封面图（PNG/JPG/WebP）
-│   ├── item_01.png     # 候选图标（至少放几个）
-│   ├── item_02.png
-│   ├── item_03.png
-│   └── target.png      # 目标图标
-├── clips/              # 实录视频
-│   └── intro_clip.mp4
-├── music/              # 背景音乐（可选）
-│   └── bgm.mp3
-├── sfx/                # 音效（可选）
-│   ├── whoosh.mp3      # 滚动音效
-│   └── impact.mp3      # 揭晓音效
-└── fonts/              # 中文字体（必须）
-    └── chinese_font.ttf
-```
-
-### 中文字体（重要）
-
-**必须放置中文字体文件**，否则程序会报错。
-
-Windows 可以直接复制系统字体：
 ```powershell
 copy C:\Windows\Fonts\msyh.ttc assets\fonts\chinese_font.ttf
 ```
 
-或者下载[思源黑体](https://github.com/adobe-fonts/source-han-sans)。
+## 启动
 
-## 修改配置
+### Web 面板（推荐）
 
-编辑 `config.json`，主要修改 `texts` 和 `assets` 部分：
-
-```json
-{
-  "texts": {
-    "top_title": "冒险岛下载教程",
-    "hook_text": "今天要介绍的是",
-    "target_name": "冒险岛国际服 RISE 版本",
-    "after_reveal_text": "这个真的很好用"
-  },
-  "assets": {
-    "target_icon": "assets/icons/target.png",
-    "intro_clip": "assets/clips/intro_clip.mp4",
-    "icons_dir": "assets/icons"
-  }
-}
+```bash
+python webui.py
 ```
 
-## 运行
+打开 http://localhost:8888 ，按 5 步完成：选模板 → 上传素材 → 配置文案 → 调参数 → 生成。
+
+### 命令行
 
 ```bash
 python main.py
 ```
 
-输出文件在 `output/output_intro.mp4`。
+## 模板
 
-## 切换主题
+内置 6 个专业模板，一键切换：
 
-换一套素材 + 改 config.json 即可，无需改代码：
+- 游戏安装教程 — 霓虹科技风
+- 软件安装教程 — 干净专业风
+- AI 工具推荐 — 未来科技风
+- 影视资源介绍 — 影院暗金风
+- 素材合集展示 — 高级电商风
+- 课程资料展示 — 清爽教育风
 
-| 场景 | 改什么 |
-|------|--------|
-| 换标题 | `texts.top_title` |
-| 换悬念文案 | `texts.hook_text` |
-| 换目标名 | `texts.target_name` |
-| 换结尾文案 | `texts.after_reveal_text` |
-| 换图标 | 替换 `assets/icons/` 里的文件 |
-| 换目标图标 | 改 `assets.target_icon` |
-| 换实录视频 | 替换 `assets/clips/intro_clip.mp4` |
-| 换背景 | 替换 `assets/backgrounds/bg.png` |
-| 换 BGM | 替换 `assets/music/bgm.mp3` |
-| 自定义分辨率 | 改 `project.width` 和 `project.height` |
+## 输出规格
 
-## 视频结构
+- 分辨率：横屏 1920×1080 / 竖屏 1080×1920 / 方形 1080×1080
+- 帧率：30 / 60fps
+- 编码：H.264 · AAC · MP4
+- 时长：4.8s（默认）/ 6.0s
 
-| 时间 | 阶段 | 效果 |
-|------|------|------|
-| 0.0-2.1s | 图标抽选 | 图标横向滚动，中间固定选择框，顶部标题 + 底部悬念字幕 |
-| 2.1-2.5s | 目标揭晓 | 图标放大居中，闪白 + 色差 + 震动冲击 |
-| 2.5-4.5s | 目标停留 | 图标居中，呼吸缩放动画，高亮边框 |
-| 4.5-6.0s | 切入实录 | 硬切到实录视频，底部情绪字幕 |
+## 项目结构
+
+```
+auto_intro_generator/
+├── main.py              # CLI 入口
+├── webui.py             # Web 面板后端
+├── webui.html           # Web 面板前端
+├── config.json          # 用户配置
+├── templates.json       # 6 个模板预设
+├── modules/             # 生成引擎
+│   ├── effects.py       # 视觉效果
+│   ├── intro_scene.py   # 抽选场景
+│   ├── reveal_scene.py  # 揭晓场景
+│   ├── hold_scene.py    # 停留场景
+│   └── ...
+├── assets/              # 用户素材
+└── output/              # 输出视频
+```
 
 ## 常见问题
 
-### 报错 "找不到中文字体文件"
-把中文字体（.ttf 或 .ttc）放到 `assets/fonts/chinese_font.ttf`。
+**生成失败？** 检查 intro_clip 是否存在于 assets/clips/，中文字体是否就位。
 
-### 字幕乱码
-确保字体文件是支持中文的 TrueType 字体。
+**字幕乱码？** 确保中文字体文件是 TrueType 格式且放在正确位置。
 
-### MoviePy 版本问题
-如果报 `ModuleNotFoundError: No module named 'moviepy'`：
-```bash
-pip install moviepy pillow numpy
-```
-
-### 生成视频黑屏
-检查图标格式是否为 PNG/JPG/WebP，且 `icons_dir` 路径正确。
-
-### 素材缺失不报错
-背景、BGM、音效缺失时程序会自动生成替代内容（渐变背景、静音等）。
-只有**中文字体**缺失时会明确报错。
-
-### 如何加速生成
-在 `config.json` 中可调整 `project.fps` 降低帧率，或减小 `project.duration` 缩短视频。
-
-## 注意事项
-
-- 禁止在默认文案中使用"永久""终身"等字样
-- 工具仅限个人使用，不是售卖商品
-- 支持 PNG/JPG/WebP 格式图标
-- 图标数量少于 5 个时自动循环复制
-- 没有 bgm 或音效时正常输出静音视频
-- 没有背景时自动生成暗色渐变背景
+**视频太慢？** 建议日常使用 30fps，最终版使用 60fps。

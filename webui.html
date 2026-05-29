@@ -1,218 +1,324 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>视频开头生成器 v2.1</title>
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1280">
+<title>IntroForge - 短视频开头生成器</title>
 <style>
-:root{--r:10px;--trans:.2s}
-[data-theme="dark"]{--bg:#0d0d1a;--card:#15152a;--border:#252545;--text:#c0c0d0;--muted:#686880;--primary:#6c5ce7;--green:#00b894;--red:#ff6b6b;--gold:#fdcb6e;--input-bg:#0d0d1a}
-[data-theme="light"]{--bg:#f0f2f5;--card:#ffffff;--border:#d9d9d9;--text:#333;--muted:#999;--primary:#6c5ce7;--green:#00b894;--red:#ff6b6b;--gold:#e6a800;--input-bg:#f5f5f5}
+:root{--bg:#070A12;--panel:rgba(255,255,255,.03);--card:rgba(255,255,255,.05);--border:rgba(255,255,255,.06);--text:#E8ECF1;--muted:#7D87A0;--pri:#7C5CFF;--pri2:#00D4FF;--green:#23C55E;--warn:#F59E0B;--red:#EF4444;--gold:#FBBF24;--r:16px;--t:.25s;--glass-blur:12px}
+[data-theme=light]{--bg:#F0F2F5;--panel:rgba(255,255,255,.7);--card:#fff;--border:#E0E4EA;--text:#1A1C2E;--muted:#6B7280;--glass-blur:16px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;transition:background var(--trans),color var(--trans)}
-.wide{max-width:1100px;margin:0 auto;padding:20px}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:10px}
-header .ver{font-size:11px;background:var(--primary);color:#fff;padding:3px 10px;border-radius:12px;font-weight:600}
-.theme-btn{width:40px;height:40px;border:none;border-radius:50%;background:var(--card);color:var(--text);font-size:20px;cursor:pointer;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all var(--trans)}
-.theme-btn:hover{transform:scale(1.1)}
-
-.tab-bar{display:flex;gap:2px;margin-bottom:24px;background:var(--card);border-radius:12px;padding:4px;border:1px solid var(--border)}
-.tab-btn{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;transition:all var(--trans)}
-.tab-btn.active{background:var(--primary);color:#fff}.tab-btn:hover:not(.active){color:var(--text)}
-
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-@media(max-width:800px){.cards{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:background var(--trans)}
-.card-head{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.card-body{padding:20px}
-
-.fg{margin-bottom:14px}.fg label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none}
-.fg input:focus,.fg select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,92,231,.12)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-
-.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.pill{padding:8px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:12px;cursor:pointer;transition:all var(--trans);font-weight:500}
-.pill:hover{border-color:var(--primary);color:var(--primary)}
-
-.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px}
-.thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--input-bg)}
-.thumb:hover{border-color:var(--primary);transform:scale(1.04)}.thumb.selected{border-color:var(--gold);box-shadow:0 0 14px rgba(253,203,110,.3)}
-.thumb img{width:100%;height:100%;object-fit:cover}
-.thumb .mark{position:absolute;top:4px;right:4px;background:var(--gold);color:#000;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;display:none}
-.thumb.selected .mark{display:block}
-
-.btn{padding:10px 22px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--trans)}.btn:active{transform:scale(.97)}
-.btn-p{background:var(--primary);color:#fff}.btn-p:hover{opacity:.9}
-.btn-g{background:var(--green);color:#fff}.btn-g:hover{opacity:.9}
-.btn-o{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.btn-o:hover{color:var(--text);border-color:var(--primary)}
-.btn-xl{width:100%;padding:16px;font-size:16px;border-radius:12px}
-.btn-sm{padding:6px 14px;font-size:11px}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-
-.timeline{display:flex;gap:2px;margin:16px 0;border-radius:8px;overflow:hidden}
-.tl{flex:1;text-align:center;padding:10px 4px;font-size:10px;color:var(--muted);background:var(--input-bg)}
-.tl.on{background:rgba(108,92,231,.18);color:var(--primary)}.tl .t{font-size:16px;font-weight:700;color:var(--text)}.tl.on .t{color:var(--primary)}
-
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;transition:background var(--t)}
+.app{display:flex;height:100vh}
+/* Sidebar */
+.side{width:200px;background:var(--panel);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;transform:translateZ(0)}
+.side-logo{padding:0 20px 20px;font-size:18px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
+.side-logo span{background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.side-steps{flex:1}
+.side-step{padding:10px 20px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:all var(--t)}
+.side-step:hover{color:var(--text);background:rgba(255,255,255,.03);transform:translateX(2px)}
+.side-step.active{color:#fff;background:rgba(124,92,255,.12);border-left-color:var(--pri)}
+.side-step .num{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all var(--t)}
+.side-step.active .num{background:var(--pri);color:#fff;box-shadow:0 0 10px rgba(124,92,255,.4)}
+.side-step.done .num{background:var(--green);color:#fff}
+.side-bottom{padding:12px 20px;border-top:1px solid var(--border)}
+.side-bottom .theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all var(--t)}
+.side-bottom .theme-btn:hover{transform:scale(1.1);border-color:var(--pri)}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--panel);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--border);gap:16px;transform:translateZ(0)}
+.workspace{flex:1;overflow-y:auto;padding:20px 24px}
 .panel{display:none}.panel.active{display:block}
-
-/* Log panel */
-.log-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-top:20px;overflow:hidden}
-.log-head{padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.log-body{max-height:200px;overflow-y:auto;padding:12px 20px;font-size:11px;font-family:"Cascadia Code","Fira Code",monospace;line-height:1.7;background:#0a0a0f;color:#aaa}
-.log-body .ok{color:var(--green)}.log-body .err{color:var(--red)}.log-body .info{color:var(--primary)}
-.log-collapsed .log-body{display:none}
-
+h2{font-size:18px;margin-bottom:16px;color:#fff;letter-spacing:.3px}
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all var(--t);position:relative}
+.card:hover{border-color:var(--pri);transform:translateY(-2px);box-shadow:0 0 30px rgba(124,92,255,.12)}
+.card.selected{border-color:var(--pri);box-shadow:0 0 0 2px rgba(124,92,255,.25),0 0 20px rgba(124,92,255,.1)}
+.card h4{font-size:15px;margin-bottom:6px;color:#fff}
+.card p{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.card .tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(124,92,255,.15);color:var(--pri)}
+.card .apply-btn{margin-top:12px;padding:8px 16px;background:var(--pri);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:100%;transition:all var(--t)}
+.card .apply-btn:hover{opacity:.9;transform:scale(1.02)}
+.card.selected .apply-btn{background:var(--green)}
+/* Form */
+.fg{margin-bottom:14px}.fg label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:all var(--t)}
+.fg input:focus,.fg select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(124,92,255,.1)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* Upload */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all var(--t);margin-bottom:12px}
+.upload-zone:hover{border-color:var(--pri);color:var(--pri);background:rgba(124,92,255,.04)}
+.upload-zone.drag-over{border-color:var(--pri2);background:rgba(0,212,255,.08)}
+.upload-zone input{display:none}
+.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:8px}
+.thumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--bg);transition:all var(--t)}
+.thumb:hover{border-color:var(--pri);transform:scale(1.05)}.thumb.target{border-color:var(--gold);box-shadow:0 0 14px rgba(251,191,36,.3)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .mark{position:absolute;top:3px;right:3px;background:var(--gold);color:#000;border-radius:4px;padding:1px 4px;font-size:8px;font-weight:700;display:none}
+.thumb.target .mark{display:block}
+/* Right panel */
+.preview{width:300px;background:var(--panel);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-left:1px solid var(--border);display:flex;flex-direction:column;padding:20px 16px;overflow-y:auto;flex-shrink:0;transform:translateZ(0)}
+.preview h3{font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1.5px}
+.preview-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.preview-card .label{font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:.5px}
+.preview-img{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1a1040,#0a1628);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);transition:all var(--t)}
+.preview-time{font-size:18px;font-weight:800;color:var(--pri);margin-bottom:4px}
+/* Bottom log */
+.log-bar{background:var(--panel);backdrop-filter:blur(var(--glass-blur));border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;max-height:42px;overflow:hidden;transition:max-height .3s;transform:translateZ(0)}
+.log-bar.expanded{max-height:200px;flex-direction:column;align-items:flex-start}
+.progress-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;position:relative}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));width:0;border-radius:2px;transition:width .5s;position:relative}
+/* Shimmer */
+.progress-fill::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}
+.log-text{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.log-body{font-size:11px;font-family:monospace;color:var(--muted);line-height:1.6;display:none}
+.log-bar.expanded .log-body{display:block}
+/* Buttons */
+.btn{padding:9px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--t);letter-spacing:.3px}
+.btn:active{transform:scale(.97)}.btn-p{background:var(--pri);color:#fff}.btn-p:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,92,255,.3)}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 12px rgba(35,197,94,.3)}
+.btn-o{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-o:hover{color:var(--text);border-color:var(--pri);transform:translateY(-1px)}
+.btn-xl{width:100%;padding:14px;font-size:15px;border-radius:12px;margin-top:12px}
+.btn-sm{padding:6px 14px;font-size:11px}.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 /* Toast */
-.toast{position:fixed;top:24px;right:24px;z-index:1000;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none}
-.toast.ok{background:var(--green)}.toast.err{background:var(--red)}.toast.info{background:var(--primary)}
-@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast{position:fixed;top:20px;right:20px;z-index:999;padding:14px 22px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;animation:slide .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;backdrop-filter:blur(8px)}
+.toast.ok{background:rgba(35,197,94,.9)}.toast.err{background:rgba(239,68,68,.9)}.toast.info{background:rgba(124,92,255,.9)}
+@keyframes slide{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
+/* Pulse dot */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-badge{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.badge-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.badge-yellow{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.badge-green{background:rgba(35,197,94,.1);color:var(--green);border:1px solid rgba(35,197,94,.3)}
+</style></head><body>
 
-/* Material grid */
-.mat-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--input-bg);border-radius:6px;margin:4px 0;font-size:12px}
-.mat-row img{width:40px;height:40px;border-radius:4px;object-fit:cover}
-.mat-row .mat-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mat-row .mat-size{color:var(--muted);font-size:10px;white-space:nowrap}
-
-/* Overlay */
-.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center}
-.overlay.show{display:flex}.overlay .box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;max-width:500px;width:90%}
-.spin{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px}
-@keyframes spin{to{transform:rotate(360deg)}}
-</style></head>
-<body>
 <div id="toast" class="toast"></div>
-<div id="overlay" class="overlay"><div class="box"><div class="spin"></div><h3 style="color:var(--text)">正在生成视频...</h3><p style="color:var(--muted);font-size:13px;margin-top:8px">请耐心等待约 30-60 秒</p><button class="btn btn-o btn-sm" style="margin-top:16px" onclick="cancelGenerate()">取消</button></div></div>
 
-<div class="wide">
-<header>
-  <h1>视频开头模板生成器 <span class="ver">v2.1</span></h1>
-  <button class="theme-btn" id="themeBtn" title="切换主题" onclick="toggleTheme()">☀️</button>
-</header>
+<div class="app">
+<!-- Sidebar -->
+<nav class="side">
+  <div class="side-logo"><span>IntroForge</span></div>
+  <div class="side-steps">
+    <div class="side-step active" data-step="1"><span class="num">1</span>选择模板</div>
+    <div class="side-step" data-step="2"><span class="num">2</span>上传素材</div>
+    <div class="side-step" data-step="3"><span class="num">3</span>配置文案</div>
+    <div class="side-step" data-step="4"><span class="num">4</span>视频参数</div>
+    <div class="side-step" data-step="5"><span class="num">5</span>生成导出</div>
+  </div>
+  <div class="side-bottom">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="切换主题">☀️</button>
+  </div>
+</nav>
 
-<div class="tab-bar">
-  <button class="tab-btn active" data-tab="config">配置</button>
-  <button class="tab-btn" data-tab="icons">图标</button>
-  <button class="tab-btn" data-tab="material">素材库</button>
-  <button class="tab-btn" data-tab="generate">生成</button>
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <strong style="font-size:15px;color:#fff">IntroForge</strong>
+      <span style="font-size:12px;color:var(--muted)">短视频开头生成器</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="save-badge" id="saveBadge" style="display:none">已保存</span>
+      <span id="assetWarn" class="status-badge badge-red" style="display:none">缺少必要素材</span>
+      <button class="btn btn-g" onclick="goStep(5);startGen()">一键生成</button>
+    </div>
+  </div>
+
+  <div class="workspace" id="workspace">
+    <!-- Step 1: Templates -->
+    <div class="panel active" id="panel-1">
+      <h2>选择视频模板</h2>
+      <div class="cards" id="tplCards"></div>
+    </div>
+    <!-- Step 2: Assets -->
+    <div class="panel" id="panel-2">
+      <h2>上传素材</h2>
+      <div class="row2">
+        <div><div class="fg"><label>背景素材</label><div class="upload-zone" onclick="this.querySelector('input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="event.preventDefault();this.classList.remove('drag-over');uploadFile(event.dataTransfer.files[0],'backgrounds')">拖拽或点击上传<input type="file" accept="image/*,video/*" onchange="uploadFile(this.files[0],'backgrounds')" hidden></div></div>
+        <div id="bgInfo" style="font-size:11px;color:var(--muted)">未设置</div></div>
+        <div><div class="fg"><label>实录视频</label><div class="upload-zone" onclick="this.querySelector('input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="event.preventDefault();this.classList.remove('drag-over');uploadFile(event.dataTransfer.files[0],'clips')">拖拽或点击上传<input type="file" accept="video/*" onchange="uploadFile(this.files[0],'clips')" hidden></div></div>
+        <div id="clipInfo" style="font-size:11px;color:var(--muted)">未设置 <span class="status-badge badge-red" style="margin-left:8px">必须</span></div></div>
+      </div>
+      <div style="margin-top:16px"><h3 style="font-size:13px;color:var(--muted);margin-bottom:8px">图标素材（点击设为揭晓目标）</h3>
+      <label class="btn btn-o btn-sm" style="cursor:pointer;margin-bottom:8px">上传图标<input type="file" accept="image/*" onchange="uploadIcons(this)" multiple hidden></label>
+      <div class="thumb-grid" id="iconGrid"></div></div>
+    </div>
+    <!-- Step 3: Texts -->
+    <div class="panel" id="panel-3">
+      <h2>配置文案</h2>
+      <div class="row2">
+        <div class="fg"><label>顶部标题</label><input id="txtTitle"></div>
+        <div class="fg"><label>悬念字幕</label><input id="txtHook"></div>
+        <div class="fg"><label>目标名称</label><input id="txtTarget"></div>
+        <div class="fg"><label>结尾文案</label><input id="txtAfter"></div>
+      </div>
+      <div style="display:flex;gap:20px;margin-top:12px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="subToggle" checked onchange="toggleSub()">显示字幕</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="cueToggle" checked onchange="toggleCues()">显示视觉提示</label>
+      </div>
+      <button class="btn btn-p" style="margin-top:12px" onclick="saveConfig();goStep(4)">保存并继续</button>
+    </div>
+    <!-- Step 4: Video params -->
+    <div class="panel" id="panel-4">
+      <h2>视频参数</h2>
+      <div class="row2">
+        <div class="fg"><label>分辨率</label><select id="resSelect" onchange="changeRes()"><option value="l">横屏 1920×1080</option><option value="p">竖屏 1080×1920</option><option value="s">方形 1080×1080</option></select></div>
+        <div class="fg"><label>帧率</label><select id="fpsSelect" onchange="changeFps()"><option value="30">30fps</option><option value="60" selected>60fps</option></select></div>
+        <div class="fg"><label>时长</label><select id="durSelect" onchange="changeDur()"><option value="4.8" selected>4.8秒</option><option value="6.0">6.0秒</option></select></div>
+        <div class="fg"><label>爆点强度</label><select id="impactSelect" onchange="changeImpact()"><option value="low">低 (柔和)</option><option value="mid" selected>中 (标准)</option><option value="high">高 (强烈)</option></select></div>
+      </div>
+      <button class="btn btn-p" style="margin-top:12px" onclick="goStep(5)">保存并进入生成</button>
+    </div>
+    <!-- Step 5: Generate -->
+    <div class="panel" id="panel-5">
+      <h2>生成导出</h2>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">🎬</div>
+        <p style="color:var(--muted);margin-bottom:16px">一切准备就绪，点击下方按钮生成视频</p>
+        <button class="btn btn-g btn-xl" style="max-width:400px" onclick="startGen()">一键生成视频</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Config -->
-<div id="p-config" class="panel active"><div class="cards">
-<div class="card"><div class="card-head">文案设置</div><div class="card-body">
-<div class="fg"><label>顶部标题</label><input id="txtTitle"></div>
-<div class="fg"><label>悬念字幕</label><input id="txtHook"></div>
-<div class="fg"><label>目标名称</label><input id="txtTarget"></div>
-<div class="fg"><label>结尾文案</label><input id="txtAfter"></div>
-<button class="btn btn-p" onclick="saveConfig()">保存文案</button>
-</div></div>
-<div class="card"><div class="card-head">主题预设 & 时间线</div><div class="card-body">
-<div class="presets" id="presets"></div>
-<div class="timeline" style="margin-top:20px"><div class="tl on"><div class="t">2.1s</div>图标抽选</div><div class="tl"><div class="t">0.4s</div>目标揭晓</div><div class="tl"><div class="t">2.0s</div>停留展示</div><div class="tl"><div class="t">1.5s</div>切入实录</div></div>
-</div></div>
-</div></div>
-
-<!-- Icons -->
-<div id="p-icons" class="panel"><div class="card"><div class="card-head"><span>图标管理（点击设为"目标"）</span><div style="display:flex;gap:8px"><button class="btn btn-o btn-sm" onclick="resetIcons()">重置示例</button><label class="btn btn-p btn-sm" style="cursor:pointer">上传图标<input type="file" accept="image/*" onchange="uploadAsset(this,'icons')" multiple hidden></label></div></div><div class="card-body"><div class="thumb-grid" id="iconGrid"></div></div></div></div>
-
-<!-- Material Library -->
-<div id="p-material" class="panel"><div class="cards">
-<div class="card"><div class="card-head">素材库 <button class="btn btn-o btn-sm" onclick="scanAssets()">一键导入</button></div><div class="card-body" id="matBody">点击"一键导入"扫描所有素材</div></div>
-<div class="card"><div class="card-head">字体 & 模板</div><div class="card-body">
-<div class="fg"><label>中文字体</label><select id="fontSelect" onchange="changeFont()" class="res-select"></select></div>
-<div class="fg"><label>视频模板</label><select id="tplSelect" onchange="applyTemplate()" class="res-select"></select></div>
-</div></div>
-<div class="card"><div class="card-head">提取背景音乐</div><div class="card-body">
-<div class="fg"><label>从视频提取 BGM</label><div style="font-size:12px;color:var(--muted);margin-bottom:8px">选择一个视频文件，自动提取音频并设为背景音乐</div></div>
-<label class="btn btn-p btn-sm" style="cursor:pointer">选择视频提取音频<input type="file" accept="video/*" onchange="extractAudioFrom(this)" hidden></label>
-<div id="extractStatus" style="font-size:12px;margin-top:8px"></div>
-</div></div>
-</div></div>
-
-<!-- Generate -->
-<div id="p-generate" class="panel"><div class="cards">
-<div class="card"><div class="card-head">生成设置</div><div class="card-body">
-<div class="row2">
-<div class="fg"><label>分辨率</label><select id="resPreset" onchange="changeRes()" class="res-select"><option value="l">横屏 1920×1080</option><option value="p">竖屏 1080×1920</option><option value="s">方形 1080×1080</option></select></div>
-<div class="fg"><label>帧率 (越高越慢)</label><select id="fpsSelect" onchange="changeFps()" class="res-select"><option value="30">30fps 标准 (快)</option><option value="60">60fps 流畅 (中)</option><option value="90">90fps 高帧 (慢)</option></select></div></div>
-<div class="row2">
-<div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="subtitleToggle" checked onchange="toggleSubtitle()" style="width:auto"> 生成字幕</label></div></div>
-<button class="btn btn-g btn-xl" onclick="startGen()">一键生成视频</button>
-</div></div>
-<div class="card"><div class="card-head">素材状态</div><div class="card-body">
-<div style="font-size:12px;line-height:1.8" id="assetStatus"></div>
-<div class="btn-row"><label class="btn btn-o btn-sm" style="cursor:pointer">上传背景<input type="file" accept="image/*,video/*" onchange="uploadAsset(this,'backgrounds')" hidden></label><label class="btn btn-o btn-sm" style="cursor:pointer">上传实录<input type="file" accept="video/*" onchange="uploadAsset(this,'clips')" hidden></label><label class="btn btn-o btn-sm" style="cursor:pointer">上传BGM<input type="file" accept="audio/*" onchange="uploadAsset(this,'music')" hidden></label></div>
-</div></div>
-</div></div>
-
-<!-- Log Panel -->
-<div class="log-panel" id="logPanel">
-  <div class="log-head" onclick="document.getElementById('logPanel').classList.toggle('log-collapsed')">生成日志 <span style="font-size:11px;color:var(--muted)">点击折叠</span></div>
-  <div class="log-body" id="logBody"><span style="color:var(--muted)">等待生成...</span></div>
+<!-- Preview -->
+<aside class="preview" id="previewPanel">
+  <h3>生成预览</h3>
+  <div class="preview-card" style="margin-bottom:12px" id="lastGenCard">
+    <div class="label">最近生成的视频</div>
+    <div id="lastGenInfo" style="font-size:11px;color:var(--muted)">暂无</div>
+    <button class="btn btn-p btn-sm" style="margin-top:6px;width:100%;display:none" id="lastGenPlay" onclick="previewVideo()">播放视频</button>
+  </div>
+  <div id="previewContent">
+    <div class="preview-card"><div class="label">0.8s — 抽选阶段</div><div class="preview-img" id="prev1">图标滑动中</div></div>
+    <div class="preview-card"><div class="label">2.1s — 目标揭晓</div><div class="preview-img" id="prev2">冲击波 + 闪白</div></div>
+    <div class="preview-card"><div class="label">3.3s — 切入实录</div><div class="preview-img" id="prev3">实录画面</div></div>
+  </div>
+  <!-- 生成中状态覆盖 -->
+  <div id="genStatus" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center">
+    <div style="font-size:32px;margin-bottom:8px" id="genIcon">⏳</div>
+    <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px" id="genPhase">准备中...</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="genPct">0%</div>
+    <div class="progress-track" style="width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px"><div id="genMiniBar" style="height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));width:0;border-radius:3px;transition:width .5s"></div></div>
+    <div style="font-size:10px;color:var(--muted)" id="genElapsed">0秒</div>
+    <div style="margin-top:12px">
+      <div style="display:flex;gap:4px;justify-content:center" id="phaseDots">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--pri);display:inline-block"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block"></span>
+      </div>
+    </div>
+  </div>
+</aside>
 </div>
 
+<!-- Log bar -->
+<div class="log-bar" id="logBar">
+  <span style="font-size:11px;color:var(--muted)">生成日志</span>
+  <div class="progress-track" id="progTrack" style="display:none"><div class="progress-fill" id="progFill"></div></div>
+  <span class="log-text" id="logMsg">就绪，选择模板开始</span>
+  <div class="log-body" id="logBody"></div>
 </div>
 
 <script>
-const A='',S=(n,d)=>document.querySelector(n),T=s=>{const t=S('#toast');t.textContent=s.msg;t.className='toast '+s.type;t.style.display='block';setTimeout(()=>t.style.display='none',4000)};
-let pollTimer=null;
+const A='',S=(n,d)=>document.querySelector(n),T=m=>{const t=S('#toast');t.textContent=m.msg;t.className='toast '+m.type;t.style.display='block';setTimeout(()=>t.style.display='none',3500)};
+let curStep=1;
 
 // Theme
 (function(){const s=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',s);S('#themeBtn').textContent=s==='dark'?'☀️':'🌙'})();
-function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('theme',n);S('#themeBtn').textContent=n==='dark'?'☀️':'🌙'}
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('theme',n);S('#themeBtn').textContent=n==='dark'?'☀️':'🌙'}
 
-// Tabs
-document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));b.classList.add('active');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));S('#p-'+b.dataset.tab).classList.add('active');
-  if(b.dataset.tab==='icons')loadIcons();if(b.dataset.tab==='material'){loadMat();loadFonts()}if(b.dataset.tab==='generate')loadAssetStatus();
-}));
-
-// Config
-async function loadCfg(){const r=await fetch(A+'/api/config');const c=await r.json();S('#txtTitle').value=c.texts?.top_title||'';S('#txtHook').value=c.texts?.hook_text||'';S('#txtTarget').value=c.texts?.target_name||'';S('#txtAfter').value=c.texts?.after_reveal_text||''}
-async function loadPresets(){const r=await fetch(A+'/api/presets');const p=await r.json();S('#presets').innerHTML=p.map((x,i)=>`<button class="pill" onclick="applyP(${JSON.stringify(x).replace(/'/g,"&#39;")})">${['🎮','🤖','🎬','💻','🎨'][i]||'📦'} ${x.name}</button>`).join('')}
-function applyP(p){S('#txtTitle').value=p.top_title;S('#txtHook').value=p.hook_text;S('#txtTarget').value=p.target_name;S('#txtAfter').value=p.after_reveal_text;saveConfig()}
-async function saveConfig(){const t={top_title:S('#txtTitle').value,hook_text:S('#txtHook').value,target_name:S('#txtTarget').value,after_reveal_text:S('#txtAfter').value};await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({texts:t})});T({msg:'配置已保存',type:'ok'})}
-async function changeRes(){const v=S('#resPreset').value;const m={l:{w:1920,h:1080},p:{w:1080,h:1920},s:{w:1080,h:1080}}[v];await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{width:m.w,height:m.h}})});T({msg:'分辨率已更新',type:'ok'})}
-async function changeFps(){const fps=parseInt(S('#fpsSelect').value);await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{fps:fps}})});T({msg:`帧率: ${fps}fps`,type:'ok'})}
-async function toggleSubtitle(){const on=S('#subtitleToggle').checked;await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{subtitle_enabled:on}})});T({msg:on?'字幕已开启':'字幕已关闭',type:'ok'})}
+// Steps
+function goStep(n){
+  curStep=n;document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));S('#panel-'+n).classList.add('active');
+  document.querySelectorAll('.side-step').forEach(s=>{s.classList.remove('active','done');if(+s.dataset.step===n)s.classList.add('active');if(+s.dataset.step<n)s.classList.add('done')});
+  S('#workspace').scrollTop=0;
+  if(n===1)loadTemplates();if(n===2){loadIcons();loadAssetInfo()}if(n===3)loadCfg();if(n===4)loadCfg();
+}
+document.querySelectorAll('.side-step').forEach(s=>s.addEventListener('click',()=>goStep(+s.dataset.step)));
 
 // Templates
-async function loadTemplates(){const r=await fetch(A+'/api/templates');const tpls=await r.json();S('#tplSelect').innerHTML=Object.keys(tpls).map(k=>`<option value="${k}">${k}</option>`).join('')}
-async function applyTemplate(){const name=S('#tplSelect').value;await fetch(A+'/api/apply-template',{method:'POST',body:JSON.stringify({name})});T({msg:'模板已应用: '+name,type:'ok'})}
+async function loadTemplates(){const r=await fetch(A+'/api/templates');const tpls=await r.json();S('#tplCards').innerHTML=Object.entries(tpls).map(([id,t])=>`<div class="card" onclick="applyTpl('${id}',this)"><h4>${t.name}</h4><p>${t.description}</p><div class="tags">${t.tags.map(tg=>`<span class="tag">${tg}</span>`).join('')}</div><button class="apply-btn">使用此模板</button></div>`).join('')}
+async function applyTpl(id,el){document.querySelectorAll('#tplCards .card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');await fetch(A+'/api/apply-template',{method:'POST',body:JSON.stringify({name:id})});T({msg:'模板已应用',type:'ok'});goStep(2)}
 
-// Audio extraction
-async function extractAudioFrom(input){const f=input.files[0];if(!f)return;S('#extractStatus').textContent='正在提取音频...';try{
-// Upload video first
-const uname='tmp_extract_'+Date.now()+'.mp4';
-await fetch(A+'/api/upload-clips',{method:'POST',headers:{'X-Filename':uname,'Content-Type':f.type},body:f});
-const r=await fetch(A+'/api/extract-audio',{method:'POST',body:JSON.stringify({video_path:'assets/clips/'+uname,output_name:'extracted_bgm.mp3'})});
-const d=await r.json();
-if(d.ok){S('#extractStatus').innerHTML='<span style="color:var(--green)">✅ 音频已提取并设为BGM</span>';T({msg:'BGM已设置',type:'ok'})}else{S('#extractStatus').textContent='提取失败: '+(d.error||'')}
-}catch(e){S('#extractStatus').textContent='失败: '+e.message}
-input.value=''}
+// Assets
+async function loadIcons(){const r=await fetch(A+'/api/config');const c=await r.json();const target=c.assets?.target_icon||'';const ar=await fetch(A+'/api/assets');const a=await ar.json();const icons=a.icons||[];S('#iconGrid').innerHTML=icons.map(f=>{const sel=target.endsWith(f)?'target':'';return`<div class="thumb ${sel}" onclick="setTarget('assets/icons/${f}')"><img src="assets/icons/${f}" onerror="this.style.display='none'"><span class="mark">目标</span></div>`}).join('')||'<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:20px">上传图标或点击"重置示例"</div>'}
+async function setTarget(p){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({assets:{target_icon:p}})});loadIcons();checkWarnings();T({msg:'已设为揭晓目标',type:'ok'})}
+async function loadAssetInfo(){const r=await fetch(A+'/api/assets');const a=await r.json();S('#bgInfo').innerHTML=(a.backgrounds||[])[0]?'当前: '+(a.backgrounds||[])[0]:'未设置';S('#clipInfo').innerHTML=(a.clips||[])[0]?'当前: '+(a.clips||[])[0]:'未设置 <span class="status-badge badge-red" style="margin-left:8px">必须</span>';checkWarnings()}
+async function uploadFile(f,folder){if(!f)return;await fetch(A+'/api/upload-'+folder,{method:'POST',headers:{'X-Filename':f.name,'Content-Type':f.type},body:f});if(folder==='icons')loadIcons();loadAssetInfo();T({msg:'已上传: '+f.name,type:'ok'})}
+async function uploadIcons(input){for(const f of input.files)await uploadFile(f,'icons');input.value=''}
+function checkWarnings(){const clip=document.getElementById('clipInfo').textContent;S('#assetWarn').style.display=clip.includes('未设置')?'inline-block':'none'}
 
-// Icons
-async function loadIcons(){const r=await fetch(A+'/api/assets');const a=await r.json();const cfg=await fetch(A+'/api/config');const c=await cfg.json();const t=c.assets?.target_icon||'';const icons=a.icons||[];S('#iconGrid').innerHTML=icons.map(f=>{const sel=t.endsWith(f)?'selected':'';return`<div class="thumb ${sel}" onclick="setTarget('assets/icons/${f}')"><img src="assets/icons/${f}" onerror="this.style.display='none'"><span class="mark">目标</span></div>`}).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">暂无图标</div>'}
-async function setTarget(p){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({assets:{target_icon:p}})});loadIcons();T({msg:'已设为揭晓目标',type:'ok'})}
-async function resetIcons(){await fetch(A+'/api/reset-icons',{method:'POST'});loadIcons();T({msg:'图标已重置',type:'ok'})}
-async function uploadAsset(input,folder){for(const f of input.files){await fetch(A+'/api/upload-'+folder,{method:'POST',headers:{'X-Filename':f.name,'Content-Type':f.type},body:f})}input.value='';if(folder==='icons')loadIcons();loadAssetStatus();T({msg:'已上传',type:'ok'})}
-
-// Materials
-async function scanAssets(){const r=await fetch(A+'/api/scan-assets',{method:'POST'});const d=await r.json();T({msg:'素材库已更新，共 '+d.total+' 个文件',type:'ok'});loadMat();loadAssetStatus();loadIcons()}
-async function loadMat(){const r=await fetch(A+'/api/material-db');const db=await r.json();let html='';for(const[k,files]of Object.entries(db)){html+=`<div style="font-weight:600;color:var(--text);margin:8px 0 4px">${k} (${files.length})</div>`;files.forEach(f=>{html+=`<div class="mat-row">${k==='icons'||k==='backgrounds'?`<img src="${f.path}" onerror="this.style.display='none'">`:''}<span class="mat-name">${f.name}</span><span class="mat-size">${f.size_kb}KB</span></div>`})}S('#matBody').innerHTML=html||'<span style="color:var(--muted)">暂无素材，点击"一键导入"扫描</span>'}
-async function loadAssetStatus(){const r=await fetch(A+'/api/material-db');const db=await r.json();const status=[];const labels={backgrounds:'背景',clips:'实录视频',music:'背景音乐',icons:'图标'};for(const[k,files]of Object.entries(db)){if(k==='icons')continue;status.push(`${labels[k]||k}: ${files.length?files[0].name:'未设置'}`)}S('#assetStatus').innerHTML=status.join('<br>')}
-
-// Fonts
-async function loadFonts(){const r=await fetch(A+'/api/fonts');const fonts=await r.json();const cfg=await fetch(A+'/api/config');const c=await cfg.json();const cur=c.assets?.font||'';S('#fontSelect').innerHTML=fonts.map(f=>`<option value="${f.path}" ${cur.includes(f.name)?'selected':''}>${f.name} ${f.source==='system'?'(系统)':''}</option>`).join('')||'<option>未找到字体</option>'}
-async function changeFont(){const v=S('#fontSelect').value;await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({assets:{font:v}})});T({msg:'字体已更新',type:'ok'})}
+// Config
+async function loadCfg(){const r=await fetch(A+'/api/config');const c=await r.json();S('#txtTitle').value=c.texts?.top_title||'';S('#txtHook').value=c.texts?.hook_text||'';S('#txtTarget').value=c.texts?.target_name||'';S('#txtAfter').value=c.texts?.after_reveal_text||'';S('#subToggle').checked=c.project?.subtitle_enabled!==false;S('#cueToggle').checked=c.project?.visual_cues_enabled!==false}
+async function saveConfig(){const t={top_title:S('#txtTitle').value,hook_text:S('#txtHook').value,target_name:S('#txtTarget').value,after_reveal_text:S('#txtAfter').value};await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({texts:t})});S('#saveBadge').style.display='inline';setTimeout(()=>S('#saveBadge').style.display='none',2000)}
+async function toggleSub(){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{subtitle_enabled:S('#subToggle').checked}})});T({msg:S('#subToggle').checked?'字幕已开启':'字幕已关闭',type:'ok'})}
+async function toggleCues(){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{visual_cues_enabled:S('#cueToggle').checked}})});T({msg:S('#cueToggle').checked?'视觉提示已开启':'视觉提示已关闭',type:'ok'})}
+async function changeRes(){const v=S('#resSelect').value,m={l:{w:1920,h:1080},p:{w:1080,h:1920},s:{w:1080,h:1080}}[v];await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{width:m.w,height:m.h}})});T({msg:'分辨率已更新',type:'ok'})}
+async function changeFps(){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{fps:parseInt(S('#fpsSelect').value)}})});T({msg:'帧率已更新',type:'ok'})}
+async function changeDur(){await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({project:{duration:parseFloat(S('#durSelect').value)}})});T({msg:'时长已更新',type:'ok'})}
+async function changeImpact(){const v=S('#impactSelect').value;const m={low:{enable_shake:false,enable_flash:false,enable_rgb_shift:false},mid:{enable_shake:true,enable_flash:true,enable_rgb_shift:true},high:{enable_shake:true,enable_flash:true,enable_rgb_shift:true}}[v];await fetch(A+'/api/save',{method:'POST',body:JSON.stringify({animation:m})});T({msg:'爆点强度: '+v,type:'ok'})}
 
 // Generate
-async function startGen(){S('#overlay').classList.add('show');S('#logBody').innerHTML='';appendLog('[开始] 正在生成视频...','info');pollTimer=setInterval(pollLog,800);
-try{const r=await fetch(A+'/api/generate',{method:'POST'});const d=await r.json();clearInterval(pollTimer);S('#overlay').classList.remove('show');await pollLog();
-if(d.ok){appendLog('[完成] 视频生成成功！','ok');T({msg:'生成成功！output/output_intro.mp4',type:'ok'})}else{appendLog('[失败] '+(d.error||'未知错误'),'err');T({msg:'生成失败',type:'err'})}}catch(e){clearInterval(pollTimer);S('#overlay').classList.remove('show');appendLog('[错误] '+e.message,'err');T({msg:'请求失败',type:'err'})}}
-function cancelGenerate(){S('#overlay').classList.remove('show');clearInterval(pollTimer);appendLog('[取消] 用户取消生成','err');T({msg:'已取消',type:'info'})}
-async function pollLog(){try{const r=await fetch(A+'/api/job-log');const d=await r.json();if(d.lines){S('#logBody').innerHTML=d.lines.map(l=>{const c=l.includes('成功')||l.includes('完成')?'ok':l.includes('失败')||l.includes('错误')||l.includes('取消')?'err':'info';return`<span class="${c}">${esc(l)}</span>`}).join('<br>');S('#logBody').scrollTop=S('#logBody').scrollHeight}}catch(e){}}
-function appendLog(msg,type){const b=S('#logBody');b.innerHTML+=`<br><span class="${type||''}">${esc(msg)}</span>`;b.scrollTop=b.scrollHeight}
+let pollTimer=null, genStart=0;
+const phases=[{pct:5,name:'初始化',icon:'🔧'},{pct:25,name:'图标抽选',icon:'🎰'},{pct:50,name:'目标揭晓',icon:'💥'},{pct:75,name:'编码导出',icon:'🎬'},{pct:100,name:'完成',icon:'✅'}];
+function updatePhaseUI(pct,logLines){
+  S('#genIcon').textContent=phases.reduce((c,p)=>pct>=p.pct?p.icon:c,'⏳');
+  S('#genPhase').textContent=phases.reduce((c,p)=>pct>=p.pct?p.name:c,'准备中');
+  S('#genPct').textContent=Math.round(pct)+'%';
+  S('#genMiniBar').style.width=pct+'%';
+  S('#genElapsed').textContent=Math.round((Date.now()-genStart)/1000)+'秒';
+  // phase dots
+  const dots=S('#phaseDots').children;
+  for(let i=0;i<dots.length;i++){
+    const dotPct=(i+1)*20;
+    dots[i].style.background=pct>=dotPct?'var(--pri)':'var(--border)';
+    dots[i].style.transform=pct>=dotPct?'scale(1.5)':'scale(1)';
+  }
+  // update preview frames
+  if(pct>=20){S('#prev1').innerHTML='<div class="preview-time">0.8s</div>图标滚动中...';S('#prev1').style.background='linear-gradient(135deg,#1a1040,#2a1a60)'}
+  if(pct>=40){S('#prev2').innerHTML='<div class="preview-time">2.1s</div>💥 冲击波揭晓';S('#prev2').style.background='linear-gradient(135deg,#402010,#603020)'}
+  if(pct>=60){S('#prev3').innerHTML='<div class="preview-time">3.3s</div>📹 切入实录';S('#prev3').style.background='linear-gradient(135deg,#103020,#1a5030)'}
+  S('#logBody').innerHTML=logLines.map(l=>'<span>'+esc(l)+'</span>').join('<br>');
+  S('#logBody').scrollTop=S('#logBody').scrollHeight;
+}
+
+async function startGen(){
+  S('#previewContent').style.display='none';S('#genStatus').style.display='block';
+  S('#logBar').classList.add('expanded');S('#progTrack').style.display='block';S('#progFill').style.width='0%';S('#logBody').innerHTML='';S('#logMsg').textContent='排队中...';
+  genStart=Date.now();S('#genIcon').textContent='⏳';S('#genPhase').textContent='准备中';S('#genPct').textContent='0%';S('#genMiniBar').style.width='0';S('#genElapsed').textContent='0秒';
+  await fetch(A+'/api/generate',{method:'POST'});
+  pollTimer=setInterval(async()=>{
+    try{
+      const r=await fetch(A+'/api/job-status');const d=await r.json();
+      const pct=Math.min(95,Math.round((Date.now()-genStart)/1000/50*100));
+      S('#progFill').style.width=pct+'%';S('#logMsg').textContent=phases.reduce((c,p)=>pct>=p.pct?p.name:c,'处理中')+' ('+Math.round(pct)+'%)';
+      updatePhaseUI(pct,d.log||[]);
+      if(d.done){
+        clearInterval(pollTimer);
+        updatePhaseUI(100,d.log||[]);
+        S('#progFill').style.width='100%';S('#genIcon').textContent='✅';
+        if(d.ok){
+          S('#logMsg').textContent='生成完成！';S('#logBody').innerHTML='<span style="color:var(--green)">✅ output/output_intro.mp4</span><br><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-p btn-sm" onclick="previewVideo()">播放视频</button><button class="btn btn-o btn-sm" onclick="openFolder()">打开文件夹</button></div>';
+          S('#lastGenInfo').textContent='output_intro.mp4 | '+(d.output||'');S('#lastGenPlay').style.display='block';
+          T({msg:'生成成功！',type:'ok'});
+        }else{
+          S('#genIcon').textContent='❌';S('#genPhase').textContent='失败';
+          S('#logMsg').textContent='生成失败';S('#logBody').innerHTML='<span style="color:var(--red)">'+esc(d.error||'未知')+'</span>';
+          T({msg:'生成失败',type:'err'});
+        }
+      }
+    }catch(e){}
+  },1000);
+}
+async function openFolder(){await fetch(A+'/api/open-output-folder',{method:'POST'})}
+function previewVideo(){
+  const v='<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="this.remove()"><video src="output/output_intro.mp4?t='+Date.now()+'" controls autoplay style="max-width:90vw;max-height:90vh;border-radius:12px"></video></div>';
+  document.body.insertAdjacentHTML('beforeend',v);
+}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-loadCfg();loadPresets();loadTemplates();
+goStep(1);loadTemplates();
 </script></body></html>

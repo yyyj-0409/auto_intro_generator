@@ -1,32 +1,74 @@
 {
-  "暗黑悬疑": {
-    "theme": {"style":"dark_smoke","accent_color":"#FFFFFF","highlight_color":"#FFD84D"},
-    "layout": {"selector_box_y":460,"top_title_y":90,"bottom_text_y":900},
-    "animation": {"icon_size":220,"selector_box_color":"#FFFFFF","glow_color":"#FFD84D"}
+  "game_download": {
+    "id": "game_download",
+    "name": "游戏安装教程",
+    "description": "适合怀旧游戏、手游、端游安装教程",
+    "tags": ["游戏","教程","抽选","热血"],
+    "preview": "assets/template_previews/game_download.png",
+    "config_patch": {
+      "theme": {"style":"dark_smoke","accent_color":"#FFFFFF","highlight_color":"#FFD84D"},
+      "video_ui": {"style":"premium_neon","selector_style":"hud_frame","accent_color":"#7C5CFF","secondary_color":"#FFD84D","glow_strength":0.55},
+      "texts": {"top_title":"游戏安装教程","hook_text":"今天要介绍的是","target_name":"目标游戏名称","after_reveal_text":"直接下载开玩"}
+    }
   },
-  "科技蓝光": {
-    "theme": {"style":"tech_blue","accent_color":"#00D4FF","highlight_color":"#00D4FF"},
-    "layout": {"selector_box_y":500,"top_title_y":80,"bottom_text_y":920},
-    "animation": {"icon_size":200,"selector_box_color":"#00D4FF","glow_color":"#00D4FF"}
+  "software_tutorial": {
+    "id": "software_tutorial",
+    "name": "软件安装教程",
+    "description": "适合 Photoshop、PR、插件等软件安装教程",
+    "tags": ["软件","教程","专业","干净"],
+    "preview": "assets/template_previews/software_tutorial.png",
+    "config_patch": {
+      "theme": {"style":"clean_white","accent_color":"#333333","highlight_color":"#6c5ce7"},
+      "video_ui": {"style":"clean_minimal","selector_style":"simple_frame","accent_color":"#6c5ce7","secondary_color":"#00D4FF","glow_strength":0.3},
+      "texts": {"top_title":"软件安装教程","hook_text":"手把手教你装","target_name":"目标软件名称","after_reveal_text":"全程无坑跟着做"}
+    }
   },
-  "霓虹赛博": {
-    "theme": {"style":"neon_cyber","accent_color":"#FF00FF","highlight_color":"#00FF00"},
-    "layout": {"selector_box_y":440,"top_title_y":100,"bottom_text_y":880},
-    "animation": {"icon_size":240,"selector_box_color":"#FF00FF","glow_color":"#00FF00"}
+  "ai_tool": {
+    "id": "ai_tool",
+    "name": "AI工具推荐",
+    "description": "适合 ChatGPT、Claude、Midjourney 等 AI 工具推荐",
+    "tags": ["AI","工具","科技","未来"],
+    "preview": "assets/template_previews/ai_tool.png",
+    "config_patch": {
+      "theme": {"style":"tech_blue","accent_color":"#00D4FF","highlight_color":"#00D4FF"},
+      "video_ui": {"style":"cyber_tech","selector_style":"hud_frame","accent_color":"#00D4FF","secondary_color":"#7C5CFF","glow_strength":0.6},
+      "texts": {"top_title":"AI工具推荐","hook_text":"最近发现一个超好用的","target_name":"目标工具名称","after_reveal_text":"效率直接翻倍"}
+    }
   },
-  "简约纯白": {
-    "theme": {"style":"clean_white","accent_color":"#333333","highlight_color":"#6c5ce7"},
-    "layout": {"selector_box_y":480,"top_title_y":70,"bottom_text_y":910},
-    "animation": {"icon_size":220,"selector_box_color":"#333333","glow_color":"#6c5ce7"}
+  "movie_resource": {
+    "id": "movie_resource",
+    "name": "影视资源介绍",
+    "description": "适合电影、电视剧、纪录片等影视资源展示",
+    "tags": ["影视","资源","影院","暗金"],
+    "preview": "assets/template_previews/movie_resource.png",
+    "config_patch": {
+      "theme": {"style":"luxe_gold","accent_color":"#D4AF37","highlight_color":"#FFD700"},
+      "video_ui": {"style":"cinema_gold","selector_style":"luxe_frame","accent_color":"#D4AF37","secondary_color":"#FFD700","glow_strength":0.5},
+      "texts": {"top_title":"影视资源分享","hook_text":"今天分享一部","target_name":"目标影片名称","after_reveal_text":"开头直接进入重点"}
+    }
   },
-  "金质尊享": {
-    "theme": {"style":"luxe_gold","accent_color":"#D4AF37","highlight_color":"#FFD700"},
-    "layout": {"selector_box_y":450,"top_title_y":85,"bottom_text_y":890},
-    "animation": {"icon_size":230,"selector_box_color":"#D4AF37","glow_color":"#FFD700"}
+  "material_pack": {
+    "id": "material_pack",
+    "name": "素材合集展示",
+    "description": "适合剪辑素材、模板、音效包等素材合集展示",
+    "tags": ["素材","合集","电商","高级"],
+    "preview": "assets/template_previews/material_pack.png",
+    "config_patch": {
+      "theme": {"style":"luxe_gold","accent_color":"#FFFFFF","highlight_color":"#FFD84D"},
+      "video_ui": {"style":"premium_ecom","selector_style":"luxe_frame","accent_color":"#FFD84D","secondary_color":"#FFFFFF","glow_strength":0.45},
+      "texts": {"top_title":"剪辑素材展示","hook_text":"这期素材合集","target_name":"200GB高质量素材包","after_reveal_text":"拍下随时下载"}
+    }
   },
-  "电竞红黑": {
-    "theme": {"style":"gamer_red","accent_color":"#FF3333","highlight_color":"#FF6600"},
-    "layout": {"selector_box_y":470,"top_title_y":90,"bottom_text_y":900},
-    "animation": {"icon_size":220,"selector_box_color":"#FF3333","glow_color":"#FF6600"}
+  "course_pack": {
+    "id": "course_pack",
+    "name": "课程资料展示",
+    "description": "适合网课、教程、考证资料等课程资料展示",
+    "tags": ["课程","教育","清爽","专业"],
+    "preview": "assets/template_previews/course_pack.png",
+    "config_patch": {
+      "theme": {"style":"clean_white","accent_color":"#2D5AF0","highlight_color":"#2D5AF0"},
+      "video_ui": {"style":"clean_edu","selector_style":"simple_frame","accent_color":"#2D5AF0","secondary_color":"#5B8DEF","glow_strength":0.25},
+      "texts": {"top_title":"课程资料展示","hook_text":"这期带来的是","target_name":"目标课程名称","after_reveal_text":"定期上新随时下载"}
+    }
   }
 }

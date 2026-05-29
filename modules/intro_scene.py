@@ -3,7 +3,7 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from moviepy import ImageClip, CompositeVideoClip, VideoClip
-from modules.effects import create_selector_box, rounded_icon, dark_bg_gradient, ease_out, ease_in_out
+from modules.effects import create_selector_box, rounded_icon, dark_bg_gradient, cubic_bezier_ease_out_back, apply_motion_blur
 
 
 def create_roulette_scene(icon_images, target_idx, config, duration):
@@ -61,7 +61,7 @@ def create_roulette_scene(icon_images, target_idx, config, duration):
         else:
             # 阶段3: 减速缓出到 target_idx
             p = min(1.0, (t - t_accel - t_fast) / max(0.01, t_slow))
-            eased = ease_out(p)
+            eased = cubic_bezier_ease_out_back(p)
             offset_start = max_speed * t_accel * 0.5 + max_speed * t_fast
             offset = offset_start + (target_idx - offset_start % total) * eased
             if offset < offset_start:
@@ -87,6 +87,11 @@ def create_roulette_scene(icon_images, target_idx, config, duration):
 
             sw, sh = max(20, int(iw * perspective)), max(20, int(ih * perspective))
             scaled = _resize(arr, sw, sh)
+            # 运动模糊：快速阶段对边缘图标施加
+            motion_dist = abs(cx + iw // 2 - box_cx) / max(1, width * 0.5)
+            if t <= t_accel + t_fast and motion_dist > 0.3:
+                blur_str = 2 + motion_dist * 4
+                scaled = apply_motion_blur(scaled, strength=blur_str)
             px, py = cx + (iw - sw) // 2, int(box_cy - sh // 2)
             _paste(frame, scaled, px, py, bright)
 

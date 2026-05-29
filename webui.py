@@ -3,7 +3,8 @@ import json, os, sys, subprocess, glob as gmod
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-JOB_LOG = []  # 全局生成日志
+import threading
+JOB_LOG = []; JOB_RUNNING = False; JOB_DONE = False; JOB_OK = False; JOB_ERROR = ""; JOB_OUTPUT = ""
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -14,6 +15,7 @@ class Handler(SimpleHTTPRequestHandler):
             "/api/fonts": self._send_fonts,
             "/api/material-db": self._send_material_db,
             "/api/job-log": self._send_job_log,
+            "/api/job-status": self._send_job_status,
             "/api/templates": self._send_templates,
         }
         if self.path in routes:
@@ -47,6 +49,7 @@ class Handler(SimpleHTTPRequestHandler):
         elif self.path == "/api/scan-assets": self._scan_assets()
         elif self.path == "/api/extract-audio": self._extract_audio(s)
         elif self.path == "/api/apply-template": self._apply_template(s)
+        elif self.path == "/api/open-output-folder": self._open_output()
         else: self.send_response(404); self.end_headers()
 
     # ---- Fonts ----
@@ -97,6 +100,12 @@ class Handler(SimpleHTTPRequestHandler):
         return db
 
     # ---- Job Log ----
+    def _send_job_status(self):
+        self._json({
+            "running": JOB_RUNNING, "done": JOB_DONE, "ok": JOB_OK,
+            "error": JOB_ERROR, "output": JOB_OUTPUT, "log": JOB_LOG[-15:]
+        })
+
     def _send_job_log(self):
         self._json({"lines":JOB_LOG})
 
@@ -142,34 +151,37 @@ class Handler(SimpleHTTPRequestHandler):
 
     # ---- Generate ----
     def _run_generate(self):
-        global JOB_LOG
-        JOB_LOG = ["[开始] 正在生成视频..."]
-        try:
-            python = sys.executable
-            env = os.environ.copy()
-            env["PYTHONIOENCODING"] = "utf-8"
-            proc = subprocess.Popen(
-                [python, os.path.join(BASE_DIR,"main.py")],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, encoding="utf-8", errors="replace",
-                cwd=BASE_DIR, env=env
-            )
-            for line in proc.stdout:
-                JOB_LOG.append(line.strip())
-                if len(JOB_LOG) > 100: JOB_LOG.pop(0)
-            proc.wait(timeout=300)
-            if proc.returncode == 0:
-                JOB_LOG.append("[完成] 视频生成成功！")
-                self._json({"ok":True,"output":os.path.join(BASE_DIR,"output","output_intro.mp4")})
-            else:
-                JOB_LOG.append(f"[失败] 返回码: {proc.returncode}")
-                self._json({"ok":False,"error":"\n".join(JOB_LOG[-20:])},500)
-        except subprocess.TimeoutExpired:
-            JOB_LOG.append("[超时] 生成超过 300 秒")
-            self._json({"ok":False,"error":"生成超时"},500)
-        except Exception as e:
-            JOB_LOG.append(f"[错误] {e}")
-            self._json({"ok":False,"error":str(e)},500)
+        global JOB_RUNNING, JOB_DONE, JOB_OK, JOB_ERROR, JOB_OUTPUT, JOB_LOG
+        if JOB_RUNNING:
+            self._json({"ok":False,"error":"已在生成中"})
+            return
+        def _do():
+            global JOB_LOG, JOB_RUNNING, JOB_DONE, JOB_OK, JOB_ERROR, JOB_OUTPUT
+            JOB_RUNNING = True; JOB_DONE = False; JOB_OK = False
+            JOB_LOG = ["[开始] 正在生成..."]
+            try:
+                python = sys.executable
+                env = os.environ.copy(); env["PYTHONIOENCODING"] = "utf-8"
+                result = subprocess.run(
+                    [python, os.path.join(BASE_DIR,"main.py")],
+                    capture_output=True, text=True, encoding="utf-8", errors="replace",
+                    cwd=BASE_DIR, timeout=600, env=env
+                )
+                JOB_LOG.extend([l for l in result.stdout.split('\n') if l.strip()][-30:])
+                if result.returncode == 0:
+                    JOB_LOG.append("[完成] 视频生成成功！"); JOB_OK = True
+                    JOB_OUTPUT = os.path.join(BASE_DIR,"output","output_intro.mp4")
+                else:
+                    JOB_LOG.append(f"[失败] 返回码: {result.returncode}")
+                    JOB_ERROR = (result.stderr or result.stdout)[-500:]
+            except subprocess.TimeoutExpired:
+                JOB_LOG.append("[超时] 超过 600 秒"); JOB_ERROR = "超时"
+            except Exception as e:
+                JOB_LOG.append(f"[错误] {e}"); JOB_ERROR = str(e)
+            finally:
+                JOB_DONE = True; JOB_RUNNING = False
+        threading.Thread(target=_do, daemon=True).start()
+        self._json({"ok":True,"status":"started"})
 
     def _reset_icons(self):
         import shutil
@@ -217,10 +229,12 @@ class Handler(SimpleHTTPRequestHandler):
             if name not in tpls:
                 self._json({"ok":False,"error":"模板不存在"},400); return
             t = tpls[name]
+            patch = t.get("config_patch", t)
             cfg = self._read_config()
-            cfg["theme"] = t.get("theme",cfg["theme"])
-            cfg["layout"] = t.get("layout",cfg["layout"])
-            if "animation" in t: cfg["animation"].update(t["animation"])
+            if "theme" in patch: cfg["theme"].update(patch["theme"])
+            if "video_ui" in patch: cfg.setdefault("video_ui",{}).update(patch["video_ui"])
+            if "texts" in patch: cfg["texts"].update(patch["texts"])
+            if "layout" in patch: cfg["layout"].update(patch["layout"])
             self._write_config(cfg)
             self._json({"ok":True,"template":name})
         except Exception as e:
@@ -249,6 +263,13 @@ class Handler(SimpleHTTPRequestHandler):
                 self._json({"ok":False,"error":result.stderr},500)
         except Exception as e:
             self._json({"ok":False,"error":str(e)},500)
+
+    def _open_output(self):
+        import platform
+        p = os.path.join(BASE_DIR,"output")
+        if platform.system()=="Windows": os.startfile(p)
+        else: subprocess.run(["open",p])
+        self._json({"ok":True})
 
     def _json(self, data, code=200):
         self.send_response(code)

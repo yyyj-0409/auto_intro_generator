@@ -1,7 +1,8 @@
 # modules/effects.py — 视觉效果 + 粒子系统 + 转场
 
+import os
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 # ==================== 电影级背景 ====================
@@ -248,6 +249,106 @@ def _draw_ring(frame, cx, cy, radius, alpha, color):
                               + color[c] * alpha).astype(np.uint8)
 
 
+# ==================== HUD/商业级 UI ====================
+
+def create_hud_frame(w, h, accent="#7C5CFF", glow_strength=0.55):
+    """HUD 风格扫描框: 四角短线 + 发光"""
+    pad = 35
+    tw, th = w + pad * 2, h + pad * 2
+    img = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    c = _hex_to_rgb(accent)
+    glow = int(255 * glow_strength)
+
+    # 外发光
+    for i in range(5, 0, -1):
+        draw.rounded_rectangle(
+            [pad - i * 3, pad - i * 3, pad + w + i * 3, pad + h + i * 3],
+            radius=18 + i, fill=(c[0], c[1], c[2], int(glow / i * 0.6)))
+
+    # 主体边框
+    draw.rounded_rectangle([pad, pad, pad + w, pad + h], radius=18,
+                           fill=(c[0], c[1], c[2], 10), outline=tuple(c), width=2)
+
+    # 四角短线装饰
+    cl = 35  # corner length
+    cw = 3
+    corners = [(pad, pad), (pad + w - cl, pad), (pad, pad + h - cl), (pad + w - cl, pad + h - cl)]
+    for cx, cy in corners:
+        draw.rounded_rectangle([cx, cy, cx + cl, cy + cw], radius=2, fill=tuple(c))
+        draw.rounded_rectangle([cx, cy, cx + cw, cy + cl], radius=2, fill=tuple(c))
+
+    return np.array(img), pad
+
+
+def create_glass_card(img_array, radius=16, border_color="#FFFFFF"):
+    """玻璃拟态图标卡片: 圆角 + 阴影 + 细边框 + 半透底"""
+    h, w = img_array.shape[:2]
+    card = Image.new("RGBA", (w + 20, h + 20), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(card)
+    # 投影
+    for i in range(6, 0, -1):
+        a = int(30 / i)
+        draw.rounded_rectangle([6 + i, 6 + i + 3, w + 14 + i, h + 14 + i + 3],
+                               radius=radius + i, fill=(0, 0, 0, a))
+    # 半透底色
+    draw.rounded_rectangle([6, 6, w + 14, h + 14], radius=radius,
+                           fill=(255, 255, 255, 15), outline=border_color, width=1)
+    # 贴图
+    icon = Image.fromarray(img_array)
+    card.paste(icon, (10, 10), icon)
+    return np.array(card)
+
+
+def draw_scan_line(frame, t, duration=0.2, y_range=None):
+    """横向扫描线: 从顶部扫到底部"""
+    h, w = frame.shape[:2]
+    if y_range is None:
+        y_range = (h // 4, h * 3 // 4)
+    progress = min(1.0, t / duration)
+    y = int(y_range[0] + (y_range[1] - y_range[0]) * progress)
+    alpha = 0.3 if progress < 0.5 else 0.3 * (2 - 2 * progress)
+    color = np.array([255, 255, 255], dtype=np.float32)
+    y1, y2 = max(0, y - 2), min(h, y + 3)
+    if y2 > y1:
+        frame[y1:y2, :] = (frame[y1:y2, :] * (1 - alpha) + color * alpha).astype(np.uint8)
+
+
+def draw_status_badge(frame, text, x, y, t, duration=0.3):
+    """状态标签: LOCKED/READY"""
+    if t < 0 or t > duration: return
+    alpha = min(1.0, t / 0.1) if t < duration / 2 else max(0, 1 - (t - duration / 2) / (duration / 2))
+    font = None
+    for fp in ["assets/fonts/chinese_font.ttf", "C:/Windows/Fonts/msyh.ttc"]:
+        if os.path.exists(fp):
+            try: font = ImageFont.truetype(fp, 28); break
+            except: pass
+    if font is None: return
+    badge = Image.new("RGBA", (200, 50), (0, 0, 0, 0))
+    d = ImageDraw.Draw(badge)
+    d.rounded_rectangle([0, 0, 199, 49], radius=10, fill=(124, 92, 255, int(200 * alpha)))
+    d.text((20, 8), text, font=font, fill=(255, 255, 255, int(255 * alpha)))
+    badge_arr = np.array(badge)
+    bh, bw = badge_arr.shape[:2]
+    sx, sy = max(0, x - bw // 2), max(0, y - bh // 2)
+    _overlay_rgba(frame, badge_arr, sx, sy)
+
+
+def _hex_to_rgb(h):
+    h = h.lstrip('#')
+    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+
+def _overlay_rgba(frame, overlay, x, y):
+    h, w = frame.shape[:2]; oh, ow = overlay.shape[:2]
+    sx, sy = max(0, x), max(0, y); ex, ey = min(w, x + ow), min(h, y + oh)
+    if sx >= ex or sy >= ey: return
+    region = overlay[sy - y:ey - y, sx - x:ex - x]
+    if region.shape[2] == 4:
+        alpha = region[:, :, 3:4] / 255.0
+        frame[sy:ey, sx:ex] = (frame[sy:ey, sx:ex] * (1 - alpha) + region[:, :, :3] * alpha).astype(np.uint8)
+
+
 # ==================== UI 元素 ====================
 
 def create_selector_box(w, h, border_color="#FFFFFF", border_width=2, radius=20, pulsing=False, pulse_time=0):
@@ -379,11 +480,57 @@ def breathing_scale(t, start_t, end_t, min_scale=0.95, max_scale=1.05, freq=1.5)
 def ease_out(t):
     return 1.0 - (1.0 - t) ** 3
 
-
 def ease_in_out(t):
-    if t < 0.5:
-        return 2 * t * t
+    if t < 0.5: return 2 * t * t
     return 1 - (-2 * t + 2) ** 2 / 2
+
+def cubic_bezier_ease_out_back(t):
+    """cubic-bezier(0.22, 0.61, 0.36, 1.0) — 抽选减速"""
+    if t <= 0: return 0
+    if t >= 1: return 1
+    return 1 + 2.7 * (t - 1) ** 3 + 1.7 * (t - 1) ** 2
+
+def cubic_bezier_bounce(t):
+    """cubic-bezier(0.34, 1.56, 0.64, 1.0) — 揭晓弹跳"""
+    if t <= 0: return 0
+    if t >= 1: return 1
+    return 1 + 3.9 * (t - 1) ** 3 + 2.9 * (t - 1) ** 2
+
+def add_film_grain(frame, strength=0.06):
+    """胶片颗粒"""
+    h, w = frame.shape[:2]
+    noise = np.random.randn(h, w, 1) * 15 * strength
+    return np.clip(frame.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+
+def color_grade(frame, shadow_blue=5, mid_warm=3, contrast=1.05):
+    """电影调色: 暗部偏蓝, 微增对比"""
+    f = frame.astype(np.float32)
+    mask = (f.mean(axis=2) < 60).astype(np.float32)
+    f[:, :, 2] += mask * shadow_blue
+    mid = ((f.mean(axis=2) > 40) & (f.mean(axis=2) < 180)).astype(np.float32)
+    f[:, :, 0] += mid * mid_warm
+    f = (f - 128) * contrast + 128
+    return np.clip(f, 0, 255).astype(np.uint8)
+
+def apply_motion_blur(img_arr, strength=3):
+    """水平运动模糊"""
+    if strength <= 1: return img_arr
+    k = int(strength); result = np.zeros_like(img_arr, dtype=np.float32)
+    for o in range(k):
+        s = o - k // 2
+        shifted = img_arr.copy()
+        if s > 0: shifted = np.roll(shifted, s, axis=1)
+        elif s < 0: shifted = np.roll(shifted, -abs(s), axis=1)
+        result += shifted.astype(np.float32) / k
+    return np.clip(result, 0, 255).astype(np.uint8)
+
+def draw_vignette(frame, strength=0.4):
+    """增强暗角"""
+    h, w = frame.shape[:2]
+    y, x = np.ogrid[:h, :w]
+    d = np.sqrt(((x - w // 2) / (w * 0.6))**2 + ((y - h // 2) / (h * 0.6))**2)
+    v = np.clip(1.0 - d * strength, 0.6, 1.0)
+    return np.clip(frame.astype(np.float32) * v[:, :, None], 0, 255).astype(np.uint8)
 
 
 # ==================== 转场 (Task 7) ====================

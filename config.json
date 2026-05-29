@@ -3,9 +3,10 @@
     "output_name": "output_intro.mp4",
     "width": 1920,
     "height": 1080,
-    "fps": 60,
+    "fps": 30,
     "duration": 4.8,
-    "subtitle_enabled": false
+    "subtitle_enabled": false,
+    "visual_cues_enabled": true
   },
   "theme": {
     "mode": "universal",
@@ -16,8 +17,8 @@
   "texts": {
     "top_title": "游戏安装教程",
     "hook_text": "今天要介绍的是",
-    "target_name": "无尽入局",
-    "after_reveal_text": ""
+    "target_name": "目标游戏名称",
+    "after_reveal_text": "直接下载开玩"
   },
   "assets": {
     "background": "assets/backgrounds/OIP-C.webp",
@@ -38,6 +39,20 @@
     "hold_start": 2.35,
     "cut_to_clip": 3.3,
     "end": 4.8
+  },
+  "video_ui": {
+    "style": "premium_neon",
+    "selector_style": "hud_frame",
+    "card_style": "glass_card",
+    "show_corner_marks": true,
+    "show_scan_line": true,
+    "show_status_badge": true,
+    "show_progress_ticks": false,
+    "accent_color": "#7C5CFF",
+    "secondary_color": "#FFD84D",
+    "glow_strength": 0.55,
+    "grain_strength": 0.08,
+    "vignette_strength": 0.35
   },
   "animation": {
     "roulette_speed": "medium",

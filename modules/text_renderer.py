@@ -25,14 +25,14 @@ def _load_font(size):
 
 
 def render_text_clip(text, font_size=52, color="#FFFFFF", stroke_color="#000000",
-                     stroke_width=3, duration=5, position="center"):
-    """渲染文字为带描边的透明 PNG ImageClip。返回 (clip, width, height)"""
+                     stroke_width=5, duration=5, position="center"):
+    """渲染文字为带描边的透明 PNG。返回 (clip, width, height)"""
     font = _load_font(font_size)
     dummy_img = Image.new("RGBA", (1, 1))
     bbox = ImageDraw.Draw(dummy_img).textbbox((0, 0), text, font=font)
     text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
 
-    pad = stroke_width * 4
+    pad = stroke_width * 3
     img_w, img_h = text_w + pad * 2, text_h + pad * 2
     img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -43,7 +43,10 @@ def render_text_clip(text, font_size=52, color="#FFFFFF", stroke_color="#000000"
                 draw.text((pad + dx, pad + dy), text, font=font, fill=stroke_color)
     draw.text((pad, pad), text, font=font, fill=color)
 
-    clip = ImageClip(np.array(img)).with_duration(duration)
+    # 锐化
+    from PIL import ImageFilter
+    img_s = img.filter(ImageFilter.UnsharpMask(radius=1, percent=60, threshold=2))
+    clip = ImageClip(np.array(img_s)).with_duration(duration)
     return clip, img_w, img_h
 
 
@@ -73,6 +76,10 @@ def render_text_clip_animated(text, font_size=52, color="#FFFFFF", stroke_color=
                 fdraw.text((pad + dx, pad + dy), text, font=font, fill=stroke_color)
     fdraw.text((pad, pad), text, font=font, fill=color)
     full_arr = np.array(full_img)
+    # 锐化
+    from PIL import ImageFilter
+    full_img_s = Image.fromarray(full_arr).filter(ImageFilter.UnsharpMask(radius=1, percent=80, threshold=2))
+    full_arr = np.array(full_img_s)
 
     def make_frame(t):
         if effect == "fade_in":

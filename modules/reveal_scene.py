@@ -3,7 +3,7 @@
 import numpy as np
 from PIL import Image
 from moviepy import VideoClip
-from modules.effects import flash_frame, rgb_shift, rounded_icon, dark_bg_gradient
+from modules.effects import flash_frame, rgb_shift, rounded_icon, dark_bg_gradient, cubic_bezier_bounce, add_film_grain, color_grade
 
 
 def create_reveal_scene(target_image, config, duration):
@@ -27,13 +27,9 @@ def create_reveal_scene(target_image, config, duration):
         t = fi / fps
         frame = bg.copy()
 
-        # 弹性缩放 (Bounce)
+        # 弹性缩放 (cubic-bezier bounce)
         p = min(1.0, t / 0.25)
-        if p < 1.0:
-            bounce = 1.0 + 0.3 * (1 - p) ** 2 * np.sin(p * np.pi)
-        else:
-            bounce = 1.0 + 0.03 * np.sin((t - 0.25) * 12) * max(0, 1 - (t - 0.25) * 4)
-
+        bounce = 0.5 + 0.5 * cubic_bezier_bounce(p)
         sz = max(10, int(target_size * bounce))
         scaled = np.array(Image.fromarray(target_arr).resize((sz, sz), Image.LANCZOS))
         sx, sy = cx - sz // 2, cy - sz // 2
@@ -54,6 +50,9 @@ def create_reveal_scene(target_image, config, duration):
         if t > 0.03 and t < 0.2:
             frame = rgb_shift(frame, t, 0.03, 0.15, 3)
 
+        # 电影调色 + 胶片颗粒
+        frame = color_grade(frame, 4, 2, 1.04)
+        frame = add_film_grain(frame, 0.05)
         frames.append(frame)
 
     def make_frame(t):
